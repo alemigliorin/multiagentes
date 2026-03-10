@@ -1,0 +1,146 @@
+interactions:
+- request:
+    body: "{\"messages\":[{\"role\":\"developer\",\"content\":\"Voc\xEA \xE9 um assistente
+      prestativo.\"},{\"role\":\"user\",\"content\":\"Qual \xE9 a capital do Brasil?
+      Responda em uma palavra.\"}],\"model\":\"gpt-4o-mini\"}"
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '186'
+      Content-Type:
+      - application/json
+      Host:
+      - api.openai.com
+      User-Agent:
+      - OpenAI/Python 2.24.0
+      X-Stainless-Arch:
+      - other:amd64
+      X-Stainless-Async:
+      - 'false'
+      X-Stainless-Lang:
+      - python
+      X-Stainless-OS:
+      - Windows
+      X-Stainless-Package-Version:
+      - 2.24.0
+      X-Stainless-Runtime:
+      - CPython
+      X-Stainless-Runtime-Version:
+      - 3.12.12
+      authorization:
+      - DUMMY_AUTHORIZATION
+      x-stainless-read-timeout:
+      - '600'
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: https://api.openai.com/v1/chat/completions
+  response:
+    body:
+      string: "{\n  \"id\": \"chatcmpl-DHsOnD38NRgGMwA5ZPDwInLuts7r9\",\n  \"object\":
+        \"chat.completion\",\n  \"created\": 1773153057,\n  \"model\": \"gpt-4o-mini-2024-07-18\",\n
+        \ \"choices\": [\n    {\n      \"index\": 0,\n      \"message\": {\n        \"role\":
+        \"assistant\",\n        \"content\": \"Bras\xEDlia.\",\n        \"refusal\":
+        null,\n        \"annotations\": []\n      },\n      \"logprobs\": null,\n
+        \     \"finish_reason\": \"stop\"\n    }\n  ],\n  \"usage\": {\n    \"prompt_tokens\":
+        33,\n    \"completion_tokens\": 3,\n    \"total_tokens\": 36,\n    \"prompt_tokens_details\":
+        {\n      \"cached_tokens\": 0,\n      \"audio_tokens\": 0\n    },\n    \"completion_tokens_details\":
+        {\n      \"reasoning_tokens\": 0,\n      \"audio_tokens\": 0,\n      \"accepted_prediction_tokens\":
+        0,\n      \"rejected_prediction_tokens\": 0\n    }\n  },\n  \"service_tier\":
+        \"default\",\n  \"system_fingerprint\": \"fp_6bedc898d2\"\n}\n"
+    headers:
+      CF-RAY:
+      - 9da30530eb7286c5-GRU
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 10 Mar 2026 14:30:58 GMT
+      Server:
+      - cloudflare
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      access-control-expose-headers:
+      - X-Request-ID
+      alt-svc:
+      - h3=":443"; ma=86400
+      cf-cache-status:
+      - DYNAMIC
+      content-length:
+      - '816'
+      openai-organization:
+      - personal-imq25v
+      openai-processing-ms:
+      - '225'
+      openai-project:
+      - proj_LVayY2etGcEfmNjzOITsUECU
+      openai-version:
+      - '2020-10-01'
+      set-cookie:
+      - __cf_bm=wZUO53m29sZTfZ2A_zGOvvxPRXK.cRjQ_jLz_PjNhS8-1773153057.426641-1.0.1.1-LHMklsLqPCHOEM_.ftXZ9VHPOSxzW0xUvlz6bMeyUjYPtHWqqnvZHQFDtNb.v3mCQNNfOE29pAxgV035dOV6VXPYk7P5tNceKkWo0gsADmLarBcZvYAcV2uK.ypgW1l8;
+        HttpOnly; Secure; Path=/; Domain=api.openai.com; Expires=Tue, 10 Mar 2026
+        15:00:58 GMT
+      x-openai-proxy-wasm:
+      - v0.1
+      x-ratelimit-limit-requests:
+      - '10000'
+      x-ratelimit-limit-tokens:
+      - '200000'
+      x-ratelimit-remaining-requests:
+      - '9999'
+      x-ratelimit-remaining-tokens:
+      - '199975'
+      x-ratelimit-reset-requests:
+      - 8.64s
+      x-ratelimit-reset-tokens:
+      - 7ms
+      x-request-id:
+      - req_2a03734799ff4723b31fa14768e7a248
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"session_id":"0c8cb09a-5ba3-4744-a873-1c282836f3e9","run_id":"4eee1343-478d-4c65-8f1c-cbdfc0292fb2","data":{"agent_id":"test-vcr-agent","db_type":null,"model_provider":"OpenAI","model_name":"OpenAIChat","model_id":"gpt-4o-mini","parser_model":null,"output_model":null,"has_tools":true,"has_memory":false,"has_learnings":false,"has_culture":false,"has_reasoning":false,"has_knowledge":false,"has_input_schema":false,"has_output_schema":false,"has_team":false},"sdk_version":"2.5.5","type":"agent"}'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '497'
+      Content-Type:
+      - application/json
+      Host:
+      - os-api.agno.com
+      user-agent:
+      - agno/2.5.5
+    method: POST
+    uri: https://os-api.agno.com/telemetry/runs
+  response:
+    body:
+      string: '{"message":"Run creation acknowledged: 4eee1343-478d-4c65-8f1c-cbdfc0292fb2","status":"success"}'
+    headers:
+      content-length:
+      - '96'
+      content-type:
+      - application/json
+      date:
+      - Tue, 10 Mar 2026 14:30:58 GMT
+      server:
+      - uvicorn
+    status:
+      code: 201
+      message: null
+version: 1

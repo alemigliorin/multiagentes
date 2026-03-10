@@ -1,0 +1,20 @@
+INFO:     Started server process [1524]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:50664 - "OPTIONS /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50664 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50664 - "OPTIONS /teams HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50664 - "GET /teams HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50664 - "OPTIONS /agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50664 - "GET /agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50664 - "OPTIONS /sessions?type=agent&component_id=orquestrador&db_id=21138089-9477-5cb5-98c0-fdc32ef6f1e0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50665 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50664 - "GET /sessions?type=agent&component_id=orquestrador&db_id=21138089-9477-5cb5-98c0-fdc32ef6f1e0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50665 - "GET /teams HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50665 - "GET /agents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50665 - "GET /sessions?type=agent&component_id=orquestrador&db_id=21138089-9477-5cb5-98c0-fdc32ef6f1e0 HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [1524]

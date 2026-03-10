@@ -1,0 +1,43 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: multiagentes-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend/tmp:/app/tmp
+      - ./backend/videos:/app/videos
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: multiagentes-ui
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:8000
+
+  frontend-streamlit:
+    build:
+      context: ./frontend-streamlit
+      dockerfile: Dockerfile
+    container_name: multiagentes-streamlit
+    restart: unless-stopped
+    ports:
+      - "8501:8501"
+    depends_on:
+      - backend
+    environment:
+      - BACKEND_HOST=http://backend:8000
+    volumes:
+      - ./backend/tmp:/app/backend/tmp
+      - ./backend/videos:/app/backend/videos

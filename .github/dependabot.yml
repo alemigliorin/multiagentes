@@ -1,0 +1,25 @@
+version: 2
+updates:
+  # Maintain dependencies for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+
+  # Maintain dependencies for the Frontend (pnpm)
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+
+  # Maintain dependencies for the Streaming Frontend (uv / pip)
+  - package-ecosystem: "pip"
+    directory: "/frontend-streamlit"
+    schedule:
+      interval: "weekly"
+
+  # Maintain dependencies for the Backend (uv / pip)
+  - package-ecosystem: "pip"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"

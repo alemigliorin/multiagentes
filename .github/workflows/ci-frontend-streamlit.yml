@@ -1,0 +1,124 @@
+name: Frontend Streamlit CI
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'frontend-streamlit/**'
+      - '.github/workflows/ci-frontend-streamlit.yml'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'frontend-streamlit/**'
+      - '.github/workflows/ci-frontend-streamlit.yml'
+
+jobs:
+  test:
+    name: Run Pytest with Coverage
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend-streamlit
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          cache-dependency-glob: "frontend-streamlit/pyproject.toml"
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync --all-extras
+
+      - name: Run Pytest with Coverage
+        run: uv run pytest tests/ -v --cov=. --cov-fail-under=80 --cov-report=term-missing
+
+  clean-code:
+    name: Ruff Linter & Formatter
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend-streamlit
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync --all-extras
+
+      - name: Run Ruff Format Check
+        run: uv run ruff format --check .
+
+      - name: Run Ruff Linter
+        run: uv run ruff check .
+
+  security:
+    name: Bandit & pip-audit (Security)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend-streamlit
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync --all-extras
+
+      - name: Run Bandit Security Scanner
+        # -r: recursive, -lll: High severity only, -x: exclude tests
+        run: uv run bandit -r . -lll -x ./tests
+
+      - name: Run pip-audit Vulnerability Scanner
+        run: |
+          uv export --format requirements-txt > reqs.txt
+          uv run pip-audit -r reqs.txt
+
+  docker-validate:
+    name: Validate and Push Docker Build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to the Container registry
+        if: github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push Streamlit Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend-streamlit
+          push: ${{ github.ref == 'refs/heads/main' }}
+          tags: ghcr.io/${{ github.repository }}/streamlit:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
