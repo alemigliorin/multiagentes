@@ -2,7 +2,7 @@ import os
 import logging # Added for logging
 
 from agno.agent import Agent
-from agno.db.sqlite import SqliteDb # Original SqliteDb import
+from agno.db.postgres import PostgresDb
 from agno.models.anthropic import Claude
 from agno.models.deepseek import DeepSeek
 from agno.models.google import Gemini
@@ -10,9 +10,10 @@ from agno.models.groq import Groq
 from agno.models.openai import OpenAIChat
 from agno.os import AgentOS
 from agno.tools.tavily import TavilyTools
+from agno.tools.yfinance import YFinanceTools
 from agno.knowledge.knowledge import Knowledge # Added
 from agno.knowledge.reader.pdf_reader import PDFReader # Added
-from agno.vectordb.chroma import ChromaDb # Added
+from agno.vectordb.pgvector import PgVector
 from dotenv import load_dotenv
 
 from media_tools import consultar_status_video, gerar_imagem, gerar_video
@@ -42,7 +43,7 @@ def get_model(provider: str = "openai", **kwargs):
     return OpenAIChat(id="gpt-4o")
 
 # --- SETUP DO BANCO DE DADOS VETORIAL (RAG PARA PDF) ---
-pdf_vector_db = ChromaDb(collection="pdf_agent", path="tmp/chromadb", persistent_client=True)
+pdf_vector_db = PgVector(table_name="pdf_documents", db_url=os.getenv("SUPABASE_DB_URL"))
 pdf_knowledge = Knowledge(vector_db=pdf_vector_db)
 
 # --- FERRAMENTAS DE PESQUISA CUSTOMIZADAS ---
@@ -82,7 +83,7 @@ pesquisador = Agent(
     instructions=open("prompts/pesquisador.md", encoding="utf-8").read(),
     add_history_to_context=True,
     num_history_runs=5,
-    db=SqliteDb(db_file="tmp/storage.db"),
+    db=PostgresDb(session_table="sessions", db_url=os.getenv("SUPABASE_DB_URL")),
 )
 
 copywriter = Agent(
@@ -93,7 +94,7 @@ copywriter = Agent(
     instructions=open("prompts/copywriter.md", encoding="utf-8").read(),
     add_history_to_context=True,
     num_history_runs=10,
-    db=SqliteDb(db_file="tmp/storage.db"),
+    db=PostgresDb(session_table="sessions", db_url=os.getenv("SUPABASE_DB_URL")),
 )
 
 juridico = Agent(
@@ -103,7 +104,7 @@ juridico = Agent(
     instructions=open("prompts/juridico.md", encoding="utf-8").read(),
     add_history_to_context=True,
     num_history_runs=3, # Modified num_history_runs
-    db=SqliteDb(db_file="tmp/storage.db"),
+    db=PostgresDb(session_table="sessions", db_url=os.getenv("SUPABASE_DB_URL")),
 )
 
 # --- AGENTE DE PDF (RAG) --- # Added
@@ -116,7 +117,7 @@ agente_pdf = Agent(
     instructions=open("prompts/agente_pdf.md", encoding="utf-8").read(),
     add_history_to_context=True,
     num_history_runs=3,
-    db=SqliteDb(db_file="tmp/storage.db"),
+    db=PostgresDb(session_table="sessions", db_url=os.getenv("SUPABASE_DB_URL")),
 )
 
 criador_experts = Agent(
@@ -126,7 +127,7 @@ criador_experts = Agent(
     instructions=open("prompts/criador_experts.md", encoding="utf-8").read(),
     add_history_to_context=True,
     num_history_runs=5,
-    db=SqliteDb(db_file="tmp/storage.db"),
+    db=PostgresDb(session_table="sessions", db_url=os.getenv("SUPABASE_DB_URL")),
 )
 
 criador_midia = Agent(
@@ -137,7 +138,7 @@ criador_midia = Agent(
     instructions=open("prompts/criador_midia.md", encoding="utf-8").read(),
     add_history_to_context=True,
     num_history_runs=10,
-    db=SqliteDb(db_file="tmp/storage.db"),
+    db=PostgresDb(session_table="sessions", db_url=os.getenv("SUPABASE_DB_URL")),
 )
 
 # --- DELEGAÇÃO DE TAREFAS (FERRAMENTAS PARA O ORQUESTRADOR) ---
@@ -218,7 +219,7 @@ orquestrador = Agent(
     instructions=open("prompts/orquestrador.md", encoding="utf-8").read(),
     add_history_to_context=True,
     num_history_runs=20,
-    db=SqliteDb(db_file="tmp/storage.db"),
+    db=PostgresDb(session_table="sessions", db_url=os.getenv("SUPABASE_DB_URL")),
 )
 
 # --- CARREGAMENTO INICIAL DE CONHECIMENTO (PDF) --- # Added
@@ -247,5 +248,64 @@ app = agent_os.get_app()
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from auth import auth_middleware
+from fastapi import File, UploadFile, Form
+from fastapi.responses import JSONResponse
+import shutil
+from pathlib import Path
 
 app.add_middleware(BaseHTTPMiddleware, dispatch=auth_middleware)
+
+@app.post("/upload-pdf")
+async def upload_pdf(file: UploadFile = File(...), save_to_rag: str = Form("false")):
+    try:
+        temp_dir = Path("tmp/uploads")
+        temp_dir.mkdir(parents=True, exist_ok=True)
+        file_path = temp_dir / file.filename
+        
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+            
+        if save_to_rag.lower() == "true":
+            # Salvar no banco vetorial
+            pdf_knowledge.add_content(
+                path=str(file_path),
+                reader=PDFReader()
+            )
+            file_path.unlink()
+            return {"status": "success", "mode": "rag", "message": "Salvo na Base de Dados"}
+        else:
+            # Modo temporário: apenas extrair e retornar o texto
+            reader = PDFReader()
+            documents = reader.read(pdf=str(file_path))
+            extracted_text = "\n\n".join([doc.content for doc in documents if doc.content])
+            file_path.unlink()
+            return {"status": "success", "mode": "temporary", "extracted_text": extracted_text}
+            
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.post("/upload-video")
+async def upload_video(file: UploadFile = File(...), creator_name: str = Form(...)):
+    try:
+        if not creator_name.strip():
+            return JSONResponse(status_code=400, content={"error": "Nome do criador é obrigatório"})
+            
+        import re
+        safe_creator_name = re.sub(r'[^a-zA-Z0-9_\-]', '', creator_name.replace(' ', '_').lower())
+        
+        video_dir = Path(f"videos/{safe_creator_name}")
+        video_dir.mkdir(parents=True, exist_ok=True)
+        
+        file_path = video_dir / file.filename
+        
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+            
+        return {"status": "success", "message": f"Vídeo salvo em {file_path}", "path": str(file_path)}
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JSONResponse(status_code=500, content={"error": str(e)})
