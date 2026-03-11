@@ -244,3 +244,8 @@ allowed_origins = os.getenv("CORS_ORIGINS", "http://localhost:3001,http://localh
 # Expondo apenas o orquestrador no AgentOS
 agent_os = AgentOS(agents=[orquestrador], cors_allowed_origins=allowed_origins)
 app = agent_os.get_app()
+
+from starlette.middleware.base import BaseHTTPMiddleware
+from auth import auth_middleware
+
+app.add_middleware(BaseHTTPMiddleware, dispatch=auth_middleware)

@@ -4,28 +4,87 @@
 
 @layer base {
   :root {
-    --color-border-default: 255, 255, 255, 0.2;
-    --scrollbar-width: 0.1rem;
+    /* Light Theme (default) */
+    --color-primary: #1a1a2e;
+    --color-primary-foreground: #ffffff;
+    --color-secondary: #f1f5f9;
+    --color-secondary-foreground: #334155;
+    --color-background: #f8f9fb;
+    --color-background-secondary: #ffffff;
+    --color-foreground: #1e293b;
+    --color-muted: #94a3b8;
+    --color-muted-foreground: #64748b;
+    --color-accent: #eef2ff;
+    --color-accent-foreground: #4f46e5;
+    --color-border: #e2e8f0;
+    --color-ring: #6366f1;
+    --color-destructive: #ef4444;
+    --color-positive: #22c55e;
+    --color-brand: #6366f1;
+    --color-brand-light: #eef2ff;
+    --color-card: #ffffff;
+    --color-card-foreground: #1e293b;
+    --color-sidebar-bg: #ffffff;
+    --color-sidebar-border: #e2e8f0;
+    --color-sidebar-hover: #f1f5f9;
+    --color-input-bg: #ffffff;
+    --color-input-border: #e2e8f0;
+    --scrollbar-width: 6px;
+  }
+
+  .dark {
+    --color-primary: #f1f5f9;
+    --color-primary-foreground: #1a1a2e;
+    --color-secondary: #1e293b;
+    --color-secondary-foreground: #cbd5e1;
+    --color-background: #0f1117;
+    --color-background-secondary: #1a1d29;
+    --color-foreground: #f1f5f9;
+    --color-muted: #64748b;
+    --color-muted-foreground: #94a3b8;
+    --color-accent: #1e1b4b;
+    --color-accent-foreground: #a5b4fc;
+    --color-border: rgba(255, 255, 255, 0.1);
+    --color-ring: #818cf8;
+    --color-destructive: #ef4444;
+    --color-positive: #22c55e;
+    --color-brand: #818cf8;
+    --color-brand-light: #1e1b4b;
+    --color-card: #1a1d29;
+    --color-card-foreground: #f1f5f9;
+    --color-sidebar-bg: #111318;
+    --color-sidebar-border: rgba(255, 255, 255, 0.08);
+    --color-sidebar-hover: rgba(255, 255, 255, 0.05);
+    --color-input-bg: #1a1d29;
+    --color-input-border: rgba(255, 255, 255, 0.1);
   }
 
   body {
-    @apply bg-background/80 text-secondary;
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
+/* Scrollbar */
 ::-webkit-scrollbar {
   width: var(--scrollbar-width);
 }
 
 ::-webkit-scrollbar-thumb {
-  --tw-border-opacity: 1;
-  @apply bg-border;
-  border-color: rgba(255, 255, 255, var(--tw-border-opacity));
+  background-color: var(--color-muted);
+  opacity: 0.3;
   border-radius: 9999px;
-  border-width: 1px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  opacity: 0.5;
 }
 
 ::-webkit-scrollbar-track {
   background-color: transparent;
-  border-radius: 9999px;
+}
+
+/* Smooth transitions for theme switching */
+* {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease;
 }

@@ -163,9 +163,15 @@ const useAIChatStreamHandler = () => {
         formData.append('stream', 'true')
         formData.append('session_id', sessionId ?? '')
 
-        // Create headers with auth token if available
+        // Create headers with auth token from Supabase
         const headers: Record<string, string> = {}
-        if (authToken) {
+        const { createClient } = await import('@/utils/supabase/client')
+        const supabase = createClient()
+        const { data: { session: currentSession } } = await supabase.auth.getSession()
+        
+        if (currentSession?.access_token) {
+          headers['Authorization'] = `Bearer ${currentSession.access_token}`
+        } else if (authToken) {
           headers['Authorization'] = `Bearer ${authToken}`
         }
 

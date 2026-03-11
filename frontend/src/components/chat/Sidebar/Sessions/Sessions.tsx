@@ -48,7 +48,10 @@ const Sessions = () => {
     hydrated,
     sessionsData,
     setSessionsData,
-    isSessionsLoading
+    isSessionsLoading,
+    activeFolderId,
+    sessionFolders,
+    searchQuery
   } = useStore()
 
   const [isScrolling, setIsScrolling] = useState(false)
@@ -121,11 +124,31 @@ const Sessions = () => {
     []
   )
 
+  const filteredSessions = useMemo(() => {
+    if (!sessionsData) return []
+    
+    let result = sessionsData
+
+    if (activeFolderId !== null) {
+      result = result.filter((session) =>
+        sessionFolders[session.session_id] === activeFolderId
+      )
+    }
+
+    if (searchQuery && searchQuery.trim() !== '') {
+      const query = searchQuery.toLowerCase().trim()
+      result = result.filter((session) =>
+        session.session_name?.toLowerCase().includes(query)
+      )
+    }
+
+    return result
+  }, [sessionsData, activeFolderId, sessionFolders, searchQuery])
+
   if (isSessionsLoading || isEndpointLoading) {
     return (
       <div className="w-full">
-        <div className="mb-2 text-xs font-medium uppercase">Sessions</div>
-        <div className="mt-4 h-[calc(100vh-325px)] w-full overflow-y-auto">
+        <div className="h-[calc(100vh-325px)] w-full overflow-y-auto">
           <SkeletonList skeletonCount={5} />
         </div>
       </div>
@@ -134,24 +157,22 @@ const Sessions = () => {
 
   return (
     <div className="w-full">
-      <div className="mb-2 w-full text-xs font-medium uppercase">Sessions</div>
       <div
-        className={`h-[calc(100vh-345px)] overflow-y-auto font-geist transition-all duration-300 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar]:transition-opacity [&::-webkit-scrollbar]:duration-300 ${
-          isScrolling
+        className={`h-[calc(100vh-345px)] overflow-y-auto font-geist transition-all duration-300 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar]:transition-opacity [&::-webkit-scrollbar]:duration-300 ${isScrolling
             ? '[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-background [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar]:opacity-0'
             : '[&::-webkit-scrollbar]:opacity-100'
-        }`}
+          }`}
         onScroll={handleScroll}
         onMouseOver={() => setIsScrolling(true)}
         onMouseLeave={handleScroll}
       >
         {!isEndpointActive ||
-        (!isSessionsLoading &&
-          (!sessionsData || sessionsData?.length === 0)) ? (
+          (!isSessionsLoading &&
+            (!filteredSessions || filteredSessions.length === 0)) ? (
           <SessionBlankState />
         ) : (
           <div className="flex flex-col gap-y-1 pr-1">
-            {sessionsData?.map((entry, idx) => (
+            {filteredSessions.map((entry, idx) => (
               <SessionItem
                 key={`${entry?.session_id}-${idx}`}
                 currentSessionId={selectedSessionId}

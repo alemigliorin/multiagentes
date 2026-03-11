@@ -6,6 +6,7 @@ import { useStore } from '../store'
 import { AgentDetails, TeamDetails, type ChatMessage } from '@/types/os'
 import { getAgentsAPI, getStatusAPI, getTeamsAPI } from '@/api/os'
 import { useQueryState } from 'nuqs'
+import { useRouter } from 'next/navigation'
 
 const useChatActions = () => {
   const { chatInputRef } = useStore()
@@ -52,11 +53,14 @@ const useChatActions = () => {
     }
   }, [selectedEndpoint, authToken])
 
+  const router = useRouter()
+
   const clearChat = useCallback(() => {
     setMessages([])
     setSessionId(null)
+    router.replace('/')
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [router])
 
   const focusChatInput = useCallback(() => {
     setTimeout(() => {

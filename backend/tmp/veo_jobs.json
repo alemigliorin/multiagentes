@@ -1,8 +1,0 @@
-{
-    "models/veo-2.0-generate-001/operations/6c8u85r2px0r": {
-        "prompt": "A close-up, cinematic shot of a vibrant, colorful butterfly with intricate wing patterns, gracefully fluttering through a lush, sun-drenched garden. The camera follows its delicate flight path as it approaches a magnificent, dew-kissed flower in full bloom. The butterfly performs a slow, elegant descent, its legs gently touching the petals, showcasing the intricate details of its landing. The garden is bursting with an array of brightly colored flowers, rich green foliage, and soft, natural light that highlights the textures and hues. The movement is fluid, ethereal, and incredibly detailed, emphasizing the fragility and beauty of nature. Shot with a macro lens, shallow depth of field, natural lighting, and a gentle breeze rustling the leaves. Ultra-HD, 4K, slow-motion, nature documentary style.",
-        "status": "completed",
-        "created_at": 1772477891.177692,
-        "output_path": "videos\\video_1772477890.mp4"
-    }
-}

@@ -1,205 +1,49 @@
 'use client'
+
 import { Button } from '@/components/ui/button'
-import { ModeSelector } from '@/components/chat/Sidebar/ModeSelector'
-import { EntitySelector } from '@/components/chat/Sidebar/EntitySelector'
 import useChatActions from '@/hooks/useChatActions'
 import { useStore } from '@/store'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect } from 'react'
-import Icon from '@/components/ui/icon'
-import { getProviderIcon } from '@/lib/modelProvider'
-import Sessions from './Sessions'
-import AuthToken from './AuthToken'
-import { isValidUrl } from '@/lib/utils'
-import { toast } from 'sonner'
 import { useQueryState } from 'nuqs'
-import { truncateText } from '@/lib/utils'
-import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Home,
+  MessageSquare,
+  Bell,
+  HelpCircle,
+  Settings,
+  PanelLeftClose,
+  PanelLeft,
+  Plus,
+  Sun,
+  Moon,
+  ChevronDown,
+  Power,
+} from 'lucide-react'
+import { useTheme } from 'next-themes'
+import SearchBar from './SearchBar'
+import ProjectFolders from './ProjectFolders'
+import ExpertsList from './ExpertsList'
+import Sessions from './Sessions'
 
-const ENDPOINT_PLACEHOLDER = 'NO ENDPOINT ADDED'
+const NAV_ITEMS = [
+  { icon: Home, label: 'Início', id: 'home' },
+  { icon: MessageSquare, label: 'Chats', id: 'chats' },
+  { icon: Bell, label: 'Notificações', id: 'notifications' },
+  { icon: HelpCircle, label: 'Ajuda', id: 'help' },
+  { icon: Settings, label: 'Configurações', id: 'settings' },
+]
+
 const SidebarHeader = () => (
-  <div className="flex items-center gap-2">
-    <Icon type="agno" size="xs" />
-    <span className="text-xs font-medium uppercase text-white">Agent UI</span>
-  </div>
-)
-
-const NewChatButton = ({
-  disabled,
-  onClick
-}: {
-  disabled: boolean
-  onClick: () => void
-}) => (
-  <Button
-    onClick={onClick}
-    disabled={disabled}
-    size="lg"
-    className="h-9 w-full rounded-xl bg-primary text-xs font-medium text-background hover:bg-primary/80"
-  >
-    <Icon type="plus-icon" size="xs" className="text-background" />
-    <span className="uppercase">New Chat</span>
-  </Button>
-)
-
-const ModelDisplay = ({ model }: { model: string }) => (
-  <div className="flex h-9 w-full items-center gap-3 rounded-xl border border-primary/15 bg-accent p-3 text-xs font-medium uppercase text-muted">
-    {(() => {
-      const icon = getProviderIcon(model)
-      return icon ? <Icon type={icon} className="shrink-0" size="xs" /> : null
-    })()}
-    {model}
-  </div>
-)
-
-const Endpoint = () => {
-  const {
-    selectedEndpoint,
-    isEndpointActive,
-    setSelectedEndpoint,
-    setAgents,
-    setSessionsData,
-    setMessages
-  } = useStore()
-  const { initialize } = useChatActions()
-  const [isEditing, setIsEditing] = useState(false)
-  const [endpointValue, setEndpointValue] = useState('')
-  const [isMounted, setIsMounted] = useState(false)
-  const [isHovering, setIsHovering] = useState(false)
-  const [isRotating, setIsRotating] = useState(false)
-  const [, setAgentId] = useQueryState('agent')
-  const [, setSessionId] = useQueryState('session')
-
-  useEffect(() => {
-    setEndpointValue(selectedEndpoint)
-    setIsMounted(true)
-  }, [selectedEndpoint])
-
-  const getStatusColor = (isActive: boolean) =>
-    isActive ? 'bg-positive' : 'bg-destructive'
-
-  const handleSave = async () => {
-    if (!isValidUrl(endpointValue)) {
-      toast.error('Please enter a valid URL')
-      return
-    }
-    const cleanEndpoint = endpointValue.replace(/\/$/, '').trim()
-    setSelectedEndpoint(cleanEndpoint)
-    setAgentId(null)
-    setSessionId(null)
-    setIsEditing(false)
-    setIsHovering(false)
-    setAgents([])
-    setSessionsData([])
-    setMessages([])
-  }
-
-  const handleCancel = () => {
-    setEndpointValue(selectedEndpoint)
-    setIsEditing(false)
-    setIsHovering(false)
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleSave()
-    } else if (e.key === 'Escape') {
-      handleCancel()
-    }
-  }
-
-  const handleRefresh = async () => {
-    setIsRotating(true)
-    await initialize()
-    setTimeout(() => setIsRotating(false), 500)
-  }
-
-  return (
-    <div className="flex flex-col items-start gap-2">
-      <div className="text-xs font-medium uppercase text-primary">AgentOS</div>
-      {isEditing ? (
-        <div className="flex w-full items-center gap-1">
-          <input
-            type="text"
-            value={endpointValue}
-            onChange={(e) => setEndpointValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className="flex h-9 w-full items-center text-ellipsis rounded-xl border border-primary/15 bg-accent p-3 text-xs font-medium text-muted"
-            autoFocus
-          />
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleSave}
-            className="hover:cursor-pointer hover:bg-transparent"
-          >
-            <Icon type="save" size="xs" />
-          </Button>
-        </div>
-      ) : (
-        <div className="flex w-full items-center gap-1">
-          <motion.div
-            className="relative flex h-9 w-full cursor-pointer items-center justify-between rounded-xl border border-primary/15 bg-accent p-3 uppercase"
-            onMouseEnter={() => setIsHovering(true)}
-            onMouseLeave={() => setIsHovering(false)}
-            onClick={() => setIsEditing(true)}
-            transition={{ type: 'spring', stiffness: 400, damping: 10 }}
-          >
-            <AnimatePresence mode="wait">
-              {isHovering ? (
-                <motion.div
-                  key="endpoint-display-hover"
-                  className="absolute inset-0 flex items-center justify-center"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <p className="flex items-center gap-2 whitespace-nowrap text-xs font-medium text-primary">
-                    <Icon type="edit" size="xxs" /> EDIT AGENTOS
-                  </p>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="endpoint-display"
-                  className="absolute inset-0 flex items-center justify-between px-3"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <p className="text-xs font-medium text-muted">
-                    {isMounted
-                      ? truncateText(selectedEndpoint, 21) ||
-                        ENDPOINT_PLACEHOLDER
-                      : 'http://localhost:7777'}
-                  </p>
-                  <div
-                    className={`size-2 shrink-0 rounded-full ${getStatusColor(isEndpointActive)}`}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleRefresh}
-            className="hover:cursor-pointer hover:bg-transparent"
-          >
-            <motion.div
-              key={isRotating ? 'rotating' : 'idle'}
-              animate={{ rotate: isRotating ? 360 : 0 }}
-              transition={{ duration: 0.5, ease: 'easeInOut' }}
-            >
-              <Icon type="refresh" size="xs" />
-            </motion.div>
-          </Button>
-        </div>
-      )}
+  <div className="flex items-center gap-2.5 px-1">
+    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand text-white text-sm font-bold">
+      M
     </div>
-  )
-}
+    <span className="text-sm font-semibold text-foreground tracking-tight">
+      Migliorin-Labs
+    </span>
+  </div>
+)
 
 const Sidebar = ({
   hasEnvToken,
@@ -209,23 +53,19 @@ const Sidebar = ({
   envToken?: string
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const [isChatsCollapsed, setIsChatsCollapsed] = useState(false)
   const { clearChat, focusChatInput, initialize } = useChatActions()
   const {
     messages,
     selectedEndpoint,
-    isEndpointActive,
-    selectedModel,
     hydrated,
-    isEndpointLoading,
     mode
   } = useStore()
   const [isMounted, setIsMounted] = useState(false)
-  const [agentId] = useQueryState('agent')
-  const [teamId] = useQueryState('team')
+  const { theme, setTheme } = useTheme()
 
   useEffect(() => {
     setIsMounted(true)
-
     if (hydrated) initialize()
   }, [selectedEndpoint, initialize, hydrated, mode])
 
@@ -235,80 +75,141 @@ const Sidebar = ({
   }
 
   return (
-    <motion.aside
-      className="relative flex h-screen shrink-0 grow-0 flex-col overflow-hidden px-2 py-3 font-dmmono"
-      initial={{ width: '16rem' }}
-      animate={{ width: isCollapsed ? '2.5rem' : '16rem' }}
-      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-    >
-      <motion.button
-        onClick={() => setIsCollapsed(!isCollapsed)}
-        className="absolute right-2 top-2 z-10 p-1"
-        aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        type="button"
-        whileTap={{ scale: 0.95 }}
+    <div className="flex h-screen">
+      {/* Vertical Icon Navigation */}
+      <div className="flex h-full w-12 shrink-0 flex-col items-center justify-between border-r border-sidebar-border bg-sidebar-bg py-3">
+        <div className="flex flex-col items-center gap-1">
+          {NAV_ITEMS.map((item) => (
+            <button
+              key={item.id}
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-muted hover:bg-sidebar-hover hover:text-foreground transition-colors"
+              title={item.label}
+            >
+              <item.icon className="h-[18px] w-[18px]" />
+            </button>
+          ))}
+        </div>
+        <div className="flex flex-col items-center gap-1">
+          {isMounted && (
+            <button
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-muted hover:bg-sidebar-hover hover:text-foreground transition-colors"
+              title="Alternar tema"
+            >
+              {theme === 'dark' ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
+            </button>
+          )}
+          <button
+            onClick={async () => {
+              const { logout } = await import('@/app/login/actions')
+              await logout()
+            }}
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-muted hover:bg-sidebar-hover hover:text-foreground transition-colors"
+            title="Sair (Logout)"
+          >
+            <Power className="h-[18px] w-[18px]" />
+          </button>
+        </div>
+      </div>
+
+      {/* Main Sidebar Panel */}
+      <motion.aside
+        className="relative flex h-screen shrink-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar-bg"
+        initial={{ width: '15rem' }}
+        animate={{ width: isCollapsed ? '0rem' : '15rem' }}
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
       >
-        <Icon
-          type="sheet"
-          size="xs"
-          className={`transform ${isCollapsed ? 'rotate-180' : 'rotate-0'}`}
-        />
-      </motion.button>
-      <motion.div
-        className="w-60 space-y-5"
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: isCollapsed ? 0 : 1, x: isCollapsed ? -20 : 0 }}
-        transition={{ duration: 0.3, ease: 'easeInOut' }}
-        style={{
-          pointerEvents: isCollapsed ? 'none' : 'auto'
-        }}
-      >
-        <SidebarHeader />
-        <NewChatButton
-          disabled={messages.length === 0}
-          onClick={handleNewChat}
-        />
-        {isMounted && (
-          <>
-            <Endpoint />
-            <AuthToken hasEnvToken={hasEnvToken} envToken={envToken} />
-            {isEndpointActive && (
-              <>
+        <motion.div
+          className="flex h-full w-60 flex-col gap-4 overflow-y-auto px-3 py-3"
+          animate={{ opacity: isCollapsed ? 0 : 1 }}
+          transition={{ duration: 0.2 }}
+          style={{ pointerEvents: isCollapsed ? 'none' : 'auto' }}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <SidebarHeader />
+            <button
+              onClick={() => setIsCollapsed(true)}
+              className="flex h-7 w-7 items-center justify-center rounded-md text-muted hover:bg-sidebar-hover hover:text-foreground transition-colors"
+            >
+              <PanelLeftClose className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* Search */}
+          <SearchBar />
+
+          {/* New Chat */}
+          <Button
+            onClick={handleNewChat}
+            disabled={messages.length === 0}
+            className="h-9 w-full rounded-lg bg-brand text-sm font-medium text-white hover:bg-brand/90 shadow-sm transition-all"
+          >
+            <Plus className="mr-1.5 h-4 w-4" />
+            Novo Chat
+          </Button>
+
+          {/* Project Folders */}
+          <ProjectFolders />
+
+          {/* Divider */}
+          <div className="h-px bg-border" />
+
+          {/* Experts */}
+          <ExpertsList />
+
+          {/* Divider */}
+          <div className="h-px bg-border" />
+
+          {/* Chat History */}
+          <div className="flex flex-col gap-0.5">
+            <button
+              onClick={() => setIsChatsCollapsed(!isChatsCollapsed)}
+              className="flex items-center justify-between px-1 mb-1 group cursor-pointer w-full"
+            >
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted group-hover:text-foreground transition-colors">
+                Chats
+              </span>
+              <motion.div
+                animate={{ rotate: isChatsCollapsed ? -90 : 0 }}
+                transition={{ duration: 0.2 }}
+                className="text-muted group-hover:text-foreground transition-colors"
+              >
+                <ChevronDown className="h-4 w-4" />
+              </motion.div>
+            </button>
+            <AnimatePresence initial={false}>
+              {!isChatsCollapsed && (
                 <motion.div
-                  className="flex w-full flex-col items-start gap-2"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5, ease: 'easeInOut' }}
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex flex-col gap-0.5 overflow-hidden"
                 >
-                  <div className="text-xs font-medium uppercase text-primary">
-                    Mode
-                  </div>
-                  {isEndpointLoading ? (
-                    <div className="flex w-full flex-col gap-2">
-                      {Array.from({ length: 3 }).map((_, index) => (
-                        <Skeleton
-                          key={index}
-                          className="h-9 w-full rounded-xl"
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <>
-                      <ModeSelector />
-                      <EntitySelector />
-                      {selectedModel && (agentId || teamId) && (
-                        <ModelDisplay model={selectedModel} />
-                      )}
-                    </>
-                  )}
+                  <Sessions />
                 </motion.div>
-                <Sessions />
-              </>
-            )}
-          </>
+              )}
+            </AnimatePresence>
+          </div>
+        </motion.div>
+      </motion.aside>
+
+      {/* Collapse toggle (shown when collapsed) */}
+      <AnimatePresence>
+        {isCollapsed && (
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsCollapsed(false)}
+            className="absolute left-14 top-3 z-10 flex h-7 w-7 items-center justify-center rounded-md text-muted hover:bg-sidebar-hover hover:text-foreground transition-colors"
+          >
+            <PanelLeft className="h-4 w-4" />
+          </motion.button>
         )}
-      </motion.div>
-    </motion.aside>
+      </AnimatePresence>
+    </div>
   )
 }
 

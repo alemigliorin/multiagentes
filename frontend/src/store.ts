@@ -8,6 +8,12 @@ import {
   type ChatMessage
 } from '@/types/os'
 
+export interface ProjectFolder {
+  id: string
+  name: string
+  color: string
+}
+
 interface Store {
   hydrated: boolean
   setHydrated: () => void
@@ -54,6 +60,21 @@ interface Store {
   ) => void
   isSessionsLoading: boolean
   setIsSessionsLoading: (isSessionsLoading: boolean) => void
+
+  // Folder Management State
+  folders: ProjectFolder[]
+  setFolders: (folders: ProjectFolder[]) => void
+  addFolder: (folder: ProjectFolder) => void
+  deleteFolder: (folderId: string) => void
+
+  sessionFolders: Record<string, string> // Mapeia session_id -> folder_id
+  setSessionFolder: (sessionId: string, folderId: string | null) => void // null para remover da pasta
+
+  activeFolderId: string | null
+  setActiveFolderId: (folderId: string | null) => void
+
+  searchQuery: string
+  setSearchQuery: (query: string) => void
 }
 
 export const useStore = create<Store>()(
@@ -104,13 +125,58 @@ export const useStore = create<Store>()(
         })),
       isSessionsLoading: false,
       setIsSessionsLoading: (isSessionsLoading) =>
-        set(() => ({ isSessionsLoading }))
+        set(() => ({ isSessionsLoading })),
+
+      // Folder Management implementation
+      folders: [],
+      setFolders: (folders) => set(() => ({ folders })),
+      addFolder: (folder) =>
+        set((state) => ({ folders: [...state.folders, folder] })),
+      deleteFolder: (folderId) =>
+        set((state) => {
+          // Remove a pasta
+          const newFolders = state.folders.filter((f) => f.id !== folderId)
+
+          // Remove vínculos das sessões com essa pasta
+          const newSessionFolders = { ...state.sessionFolders }
+          Object.keys(newSessionFolders).forEach((key) => {
+            if (newSessionFolders[key] === folderId) {
+              delete newSessionFolders[key]
+            }
+          })
+
+          return {
+            folders: newFolders,
+            sessionFolders: newSessionFolders,
+            activeFolderId: state.activeFolderId === folderId ? null : state.activeFolderId
+          }
+        }),
+
+      sessionFolders: {},
+      setSessionFolder: (sessionId, folderId) =>
+        set((state) => {
+          const newSessionFolders = { ...state.sessionFolders }
+          if (folderId === null) {
+            delete newSessionFolders[sessionId]
+          } else {
+            newSessionFolders[sessionId] = folderId
+          }
+          return { sessionFolders: newSessionFolders }
+        }),
+
+      activeFolderId: null,
+      setActiveFolderId: (activeFolderId) => set(() => ({ activeFolderId })),
+
+      searchQuery: '',
+      setSearchQuery: (searchQuery) => set(() => ({ searchQuery }))
     }),
     {
       name: 'endpoint-storage',
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
-        selectedEndpoint: state.selectedEndpoint
+        selectedEndpoint: state.selectedEndpoint,
+        folders: state.folders,
+        sessionFolders: state.sessionFolders
       }),
       onRehydrateStorage: () => (state) => {
         state?.setHydrated?.()
