@@ -1,5 +1,6 @@
 services:
   backend:
+    image: ghcr.io/alemigliorin/multiagentes-backend:latest
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -15,6 +16,7 @@ services:
       - nginx-proxy
 
   frontend:
+    image: ghcr.io/alemigliorin/multiagentes-frontend:latest
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -29,6 +31,7 @@ services:
       - nginx-proxy
 
   frontend-streamlit:
+    image: ghcr.io/alemigliorin/multiagentes-streamlit:latest
     build:
       context: ./frontend-streamlit
       dockerfile: Dockerfile

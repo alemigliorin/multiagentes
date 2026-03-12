@@ -119,6 +119,6 @@ jobs:
         with:
           context: ./frontend-streamlit
           push: ${{ github.ref == 'refs/heads/main' }}
-          tags: ghcr.io/${{ github.repository }}/streamlit:latest
+          tags: ghcr.io/${{ github.repository }}-streamlit:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max

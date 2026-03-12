@@ -82,6 +82,6 @@ jobs:
         with:
           context: ./frontend
           push: ${{ github.ref == 'refs/heads/main' }}
-          tags: ghcr.io/${{ github.repository }}/frontend:latest
+          tags: ghcr.io/${{ github.repository }}-frontend:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max

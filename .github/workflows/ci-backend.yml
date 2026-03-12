@@ -122,6 +122,6 @@ jobs:
         with:
           context: ./backend
           push: ${{ github.ref == 'refs/heads/main' }}
-          tags: ghcr.io/${{ github.repository }}/backend:latest
+          tags: ghcr.io/${{ github.repository }}-backend:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
