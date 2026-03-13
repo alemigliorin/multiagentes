@@ -18,18 +18,16 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        - NEXT_PUBLIC_API_URL=https://api.migliorinlabs.cloud
-        - NEXT_PUBLIC_SUPABASE_URL=https://vgqfsswhprqtjebbouxu.supabase.co
-        - NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZncWZzc3docHJxdGplYmJvdXh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMDQxMzAsImV4cCI6MjA4ODY4MDEzMH0.m1VqES3TyC3fTN9S-SZCVMP9Af6Y3TZ-NL5hp042qGY
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+        - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+        - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
     restart: unless-stopped
     depends_on:
       - backend
+    env_file:
+      - ./frontend/.env.production
     expose:
       - "3000"
-    environment:
-      - NEXT_PUBLIC_API_URL=https://api.migliorinlabs.cloud
-      - NEXT_PUBLIC_SUPABASE_URL=https://vgqfsswhprqtjebbouxu.supabase.co
-      - NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZncWZzc3docHJxdGplYmJvdXh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMDQxMzAsImV4cCI6MjA4ODY4MDEzMH0.m1VqES3TyC3fTN9S-SZCVMP9Af6Y3TZ-NL5hp042qGY
     networks:
       - nginx-proxy
 
