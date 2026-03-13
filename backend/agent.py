@@ -130,6 +130,7 @@ supabase_db_url = os.getenv("SUPABASE_DB_URL")
 
 pesquisador = create_agent(
     name="pesquisador",
+    model=get_model("openai", id="gpt-5-nano"),
     description="Agente focado em buscar dados atuais na internet.",
     tools=[busca_rapida, busca_profunda],
     instructions_file="prompts/pesquisador.md",
@@ -138,6 +139,7 @@ pesquisador = create_agent(
 
 copywriter = create_agent(
     name="copywriter",
+    model=get_model("openai", id="gpt-5-nano"),
     description="Agente Copywriter que busca no RAG o estilo do expert e escreve.",
     tools=[get_creator_transcripts, list_available_creators],
     instructions_file="prompts/copywriter.md",
@@ -147,6 +149,7 @@ copywriter = create_agent(
 
 juridico = create_agent(
     name="juridico",
+    model=get_model("openai", id="gpt-5-nano"),
     description="Especialista em compliance e leis de defesa do consumidor.",
     instructions_file="prompts/juridico.md",
     db_url=supabase_db_url,
@@ -155,6 +158,7 @@ juridico = create_agent(
 
 agente_pdf = create_agent(
     name="agente_pdf",
+    model=get_model("openai", id="gpt-5-nano"),
     description="Agente especializado em ler, analisar e extrair informações precisas de PDFs.",
     knowledge=pdf_knowledge,
     search_knowledge=True,
@@ -165,6 +169,7 @@ agente_pdf = create_agent(
 
 criador_experts = create_agent(
     name="criador_experts",
+    model=get_model("openai", id="gpt-5-nano"),
     description="Agente estrategista para criar Personas e Big Ideas.",
     instructions_file="prompts/criador_experts.md",
     db_url=supabase_db_url
@@ -252,7 +257,7 @@ def acionar_agente_pdf(query: str) -> str:
 
 # --- INSTANCIANDO O ORQUESTRADOR ---
 orquestrador = Agent(
-    model=get_model("openai", id="gpt-4o-mini"),
+    model=get_model("openai", id="gpt-5-mini"),
     tools=[
         acionar_pesquisador,
         acionar_copywriter,
