@@ -16,8 +16,9 @@ echo "🚀 Iniciando deploy do Multiagentes..."
 echo "📥 Puxando imagens do GHCR..."
 docker compose -f $COMPOSE_FILE pull
 
-# 4. Reiniciar os serviços
+# 4. Reiniciar os serviços (buildando o frontend localmente para injetar variáveis)
 echo "🔄 Reiniciando containers..."
+docker compose -f $COMPOSE_FILE up -d --build frontend
 docker compose -f $COMPOSE_FILE up -d --remove-orphans
 
 # 5. Limpando imagens antigas (opcional)

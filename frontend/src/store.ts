@@ -103,7 +103,9 @@ export const useStore = create<Store>()(
         })),
       chatInputRef: { current: null },
       selectedEndpoint:
-        process.env.NEXT_PUBLIC_DEFAULT_ENDPOINT || 'http://localhost:8000',
+        process.env.NEXT_PUBLIC_API_URL ||
+        process.env.NEXT_PUBLIC_DEFAULT_ENDPOINT ||
+        'http://localhost:8000',
       setSelectedEndpoint: (selectedEndpoint) =>
         set(() => ({ selectedEndpoint })),
       authToken: '',
