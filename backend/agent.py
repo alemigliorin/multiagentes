@@ -52,8 +52,18 @@ def get_model(provider: str = "openai", **kwargs):
 
 
 # --- SETUP DO BANCO DE DADOS VETORIAL (RAG PARA PDF) ---
-pdf_vector_db = PgVector(table_name="pdf_documents", db_url=os.getenv("SUPABASE_DB_URL"))
-pdf_knowledge = Knowledge(vector_db=pdf_vector_db)
+def get_pdf_knowledge():
+    db_url = os.getenv("SUPABASE_DB_URL")
+    if not db_url:
+        return None
+    try:
+        pdf_vector_db = PgVector(table_name="pdf_documents", db_url=db_url)
+        return Knowledge(vector_db=pdf_vector_db)
+    except Exception as e:
+        logging.error(f"Erro ao inicializar base de conhecimento PDF: {e}")
+        return None
+
+pdf_knowledge = get_pdf_knowledge()
 
 
 # --- FERRAMENTAS DE PESQUISA CUSTOMIZADAS ---
@@ -86,71 +96,88 @@ def busca_profunda(query: str) -> str:
 
 
 # --- INSTANCIANDO OS AGENTES ESPECIALISTAS ---
+def create_agent(name, description, tools=None, instructions_file=None, db_url=None, **kwargs):
+    model = kwargs.get("model") or get_model("openai", id="gpt-4o")
+    
+    db = None
+    if db_url:
+        try:
+            db = PostgresDb(session_table="sessions", db_url=db_url)
+        except Exception:
+            logging.warning(f"Could not initialize DB for agent {name}")
 
-pesquisador = Agent(
-    model=get_model("openai", id="gpt-5-nano"),  # Modelo mais rápido/barato para pesquisa base
+    instructions = ""
+    if instructions_file:
+        try:
+            with open(instructions_file, encoding="utf-8") as f:
+                instructions = f.read()
+        except FileNotFoundError:
+            logging.error(f"Instructions file not found: {instructions_file}")
+
+    return Agent(
+        model=model,
+        name=name,
+        description=description,
+        tools=tools,
+        instructions=instructions,
+        db=db,
+        add_history_to_context=kwargs.get("add_history_to_context", True),
+        num_history_runs=kwargs.get("num_history_runs", 5),
+        **{k: v for k, v in kwargs.items() if k not in ["model", "add_history_to_context", "num_history_runs"]}
+    )
+
+supabase_db_url = os.getenv("SUPABASE_DB_URL")
+
+pesquisador = create_agent(
     name="pesquisador",
     description="Agente focado em buscar dados atuais na internet.",
     tools=[busca_rapida, busca_profunda],
-    instructions=open("prompts/pesquisador.md", encoding="utf-8").read(),
-    add_history_to_context=True,
-    num_history_runs=5,
-    db=PostgresDb(session_table="sessions", db_url=os.getenv("SUPABASE_DB_URL")),
+    instructions_file="prompts/pesquisador.md",
+    db_url=supabase_db_url
 )
 
-copywriter = Agent(
-    model=get_model("openai", id="gpt-5-nano"),  # Bom para seguir estilos
+copywriter = create_agent(
     name="copywriter",
     description="Agente Copywriter que busca no RAG o estilo do expert e escreve.",
     tools=[get_creator_transcripts, list_available_creators],
-    instructions=open("prompts/copywriter.md", encoding="utf-8").read(),
-    add_history_to_context=True,
-    num_history_runs=10,
-    db=PostgresDb(session_table="sessions", db_url=os.getenv("SUPABASE_DB_URL")),
+    instructions_file="prompts/copywriter.md",
+    db_url=supabase_db_url,
+    num_history_runs=10
 )
 
-juridico = Agent(
-    model=get_model("openai", id="gpt-5-nano"),
+juridico = create_agent(
     name="juridico",
-    description="Especialista em compliance e leis de defesa do consumidor.",  # Modified description
-    instructions=open("prompts/juridico.md", encoding="utf-8").read(),
-    add_history_to_context=True,
-    num_history_runs=3,  # Modified num_history_runs
-    db=PostgresDb(session_table="sessions", db_url=os.getenv("SUPABASE_DB_URL")),
+    description="Especialista em compliance e leis de defesa do consumidor.",
+    instructions_file="prompts/juridico.md",
+    db_url=supabase_db_url,
+    num_history_runs=3
 )
 
-# --- AGENTE DE PDF (RAG) --- # Added
-agente_pdf = Agent(
-    model=get_model("openai", id="gpt-5-nano"),
+agente_pdf = create_agent(
     name="agente_pdf",
     description="Agente especializado em ler, analisar e extrair informações precisas de PDFs.",
     knowledge=pdf_knowledge,
     search_knowledge=True,
-    instructions=open("prompts/agente_pdf.md", encoding="utf-8").read(),
-    add_history_to_context=True,
-    num_history_runs=3,
-    db=PostgresDb(session_table="sessions", db_url=os.getenv("SUPABASE_DB_URL")),
+    instructions_file="prompts/agente_pdf.md",
+    db_url=supabase_db_url,
+    num_history_runs=3
 )
 
-criador_experts = Agent(
-    model=get_model("openai", id="gpt-5-nano"),  # Claude costuma ser melhor para brainstoming criativo/personas
+criador_experts = create_agent(
     name="criador_experts",
     description="Agente estrategista para criar Personas e Big Ideas.",
-    instructions=open("prompts/criador_experts.md", encoding="utf-8").read(),
-    add_history_to_context=True,
-    num_history_runs=5,
-    db=PostgresDb(session_table="sessions", db_url=os.getenv("SUPABASE_DB_URL")),
+    instructions_file="prompts/criador_experts.md",
+    db_url=supabase_db_url
 )
 
-criador_midia = Agent(
-    model=get_model("google", id="gemini-2.5-flash"),
+criador_midia = create_agent(
     name="criador_midia",
+    model=get_model("google", id="gemini-2.0-flash"),
     description="Agente focado na interpretação de ordens visuais e geração de imagens/vídeos. Gerencia filas de vídeos longos (Veo).",
     tools=[gerar_imagem, gerar_video, consultar_status_video],
-    instructions=open("prompts/criador_midia.md", encoding="utf-8").read(),
-    add_history_to_context=True,
-    num_history_runs=10,
-    db=PostgresDb(session_table="sessions", db_url=os.getenv("SUPABASE_DB_URL")),
+    instructions_file="prompts/criador_midia.md",
+    db_url=supabase_db_url,
+    num_history_runs=10
 )
 
 # --- DELEGAÇÃO DE TAREFAS (FERRAMENTAS PARA O ORQUESTRADOR) ---
@@ -225,7 +252,7 @@ def acionar_agente_pdf(query: str) -> str:
 
 # --- INSTANCIANDO O ORQUESTRADOR ---
 orquestrador = Agent(
-    model=get_model("openai", id="gpt-5-mini"),  # GPT-5 mini atua como líder da orquestração
+    model=get_model("openai", id="gpt-4o-mini"),
     tools=[
         acionar_pesquisador,
         acionar_copywriter,
@@ -233,31 +260,28 @@ orquestrador = Agent(
         acionar_criador_experts,
         acionar_criador_midia,
         acionar_agente_pdf,
-    ],  # Added acionar_agente_pdf
+    ],
     name="orquestrador",
     description="Você é o Líder da Equipe e principal contato. Você delega tarefas e consolida o resultado final.",
-    instructions=open("prompts/orquestrador.md", encoding="utf-8").read(),
+    instructions=open("prompts/orquestrador.md", encoding="utf-8").read() if os.path.exists("prompts/orquestrador.md") else "Instruções não encontradas.",
     add_history_to_context=True,
     num_history_runs=20,
-    db=PostgresDb(session_table="sessions", db_url=os.getenv("SUPABASE_DB_URL")),
+    db=PostgresDb(session_table="sessions", db_url=supabase_db_url) if supabase_db_url else None,
 )
 
 # --- CARREGAMENTO INICIAL DE CONHECIMENTO (PDF) --- # Added
-logging.info("Aguarde... Carregando dados no AgentOS e preparando times")
-
-# Adicionando o PDF estático do Grendene para prova de conceito
-try:
+if pdf_knowledge:
     logging.info("Carregando PDF da Grendene no Banco de Conhecimento...")
-    pdf_knowledge.add_content(
-        url="https://s3.sa-east-1.amazonaws.com/static.grendene.aatb.com.br/releases/2417_2T25.pdf",
-        metadata={"source": "Grendene", "type": "pdf", "description": "Relatório Trimestral 2T25"},
-        skip_if_exists=True,
-        reader=PDFReader(),
-    )
-    logging.info("PDF carregado/verificado!")
-except Exception as e:
-    logging.error(f"Erro ao carregar PDF: {e}")
-
+    try:
+        pdf_knowledge.add_content(
+            url="https://s3.sa-east-1.amazonaws.com/static.grendene.aatb.com.br/releases/2417_2T25.pdf",
+            metadata={"source": "Grendene", "type": "pdf", "description": "Relatório Trimestral 2T25"},
+            skip_if_exists=True,
+            reader=PDFReader(),
+        )
+        logging.info("PDF carregado/verificado!")
+    except Exception as e:
+        logging.error(f"Erro ao carregar PDF: {e}")
 
 allowed_origins = os.getenv("CORS_ORIGINS", "http://localhost:3001,http://localhost:3000,http://127.0.0.1:3001").split(",")
 # Expondo apenas o orquestrador no AgentOS

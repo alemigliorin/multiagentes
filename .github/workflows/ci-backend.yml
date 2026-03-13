@@ -88,13 +88,12 @@ jobs:
         run: uv sync --all-extras --dev
 
       - name: Run Bandit Security Scanner
-        # -r: recursive, -lll: High severity only, -x: exclude tests directory
-        run: uv run bandit -r . -lll -x ./tests
+        # Scans application code, excluding virtual env and tests
+        run: uv run bandit -r . -lll --exclude ./.venv,./tests
 
       - name: Run pip-audit Vulnerability Scanner
-        # pip-audit requer o arquivo requirements ou o env, o uv export gera o requirements pra ele
         run: |
-          uv export --format requirements-txt > reqs.txt
+          uv export --frozen --format requirements-txt > reqs.txt
           uv run pip-audit -r reqs.txt
 
   docker-validate:
