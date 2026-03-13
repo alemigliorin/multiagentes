@@ -177,7 +177,7 @@ criador_experts = create_agent(
 
 criador_midia = create_agent(
     name="criador_midia",
-    model=get_model("google", id="gemini-2.0-flash"),
+    model=get_model("google", id="gemini-2.5-flash"),
     description="Agente focado na interpretação de ordens visuais e geração de imagens/vídeos. Gerencia filas de vídeos longos (Veo).",
     tools=[gerar_imagem, gerar_video, consultar_status_video],
     instructions_file="prompts/criador_midia.md",
