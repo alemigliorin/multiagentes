@@ -63,6 +63,7 @@ def get_pdf_knowledge():
         logging.error(f"Erro ao inicializar base de conhecimento PDF: {e}")
         return None
 
+
 pdf_knowledge = get_pdf_knowledge()
 
 
@@ -97,8 +98,8 @@ def busca_profunda(query: str) -> str:
 
 # --- INSTANCIANDO OS AGENTES ESPECIALISTAS ---
 def create_agent(name, description, tools=None, instructions_file=None, db_url=None, **kwargs):
-    model = kwargs.get("model") or get_model("openai", id="gpt-4o")
-    
+    model = kwargs.get("model") or get_model("openai", id="gpt-5-nano")
+
     db = None
     if db_url:
         try:
@@ -123,57 +124,21 @@ def create_agent(name, description, tools=None, instructions_file=None, db_url=N
         db=db,
         add_history_to_context=kwargs.get("add_history_to_context", True),
         num_history_runs=kwargs.get("num_history_runs", 5),
-        **{k: v for k, v in kwargs.items() if k not in ["model", "add_history_to_context", "num_history_runs"]}
+        **{k: v for k, v in kwargs.items() if k not in ["model", "add_history_to_context", "num_history_runs"]},
     )
+
 
 supabase_db_url = os.getenv("SUPABASE_DB_URL")
 
-pesquisador = create_agent(
-    name="pesquisador",
-    model=get_model("openai", id="gpt-5-nano"),
-    description="Agente focado em buscar dados atuais na internet.",
-    tools=[busca_rapida, busca_profunda],
-    instructions_file="prompts/pesquisador.md",
-    db_url=supabase_db_url
-)
+pesquisador = create_agent(name="pesquisador", model=get_model("openai", id="gpt-5-nano"), description="Agente focado em buscar dados atuais na internet.", tools=[busca_rapida, busca_profunda], instructions_file="prompts/pesquisador.md", db_url=supabase_db_url)
 
-copywriter = create_agent(
-    name="copywriter",
-    model=get_model("openai", id="gpt-5-nano"),
-    description="Agente Copywriter que busca no RAG o estilo do expert e escreve.",
-    tools=[get_creator_transcripts, list_available_creators],
-    instructions_file="prompts/copywriter.md",
-    db_url=supabase_db_url,
-    num_history_runs=10
-)
+copywriter = create_agent(name="copywriter", model=get_model("openai", id="gpt-5-nano"), description="Agente Copywriter que busca no RAG o estilo do expert e escreve.", tools=[get_creator_transcripts, list_available_creators], instructions_file="prompts/copywriter.md", db_url=supabase_db_url, num_history_runs=10)
 
-juridico = create_agent(
-    name="juridico",
-    model=get_model("openai", id="gpt-5-nano"),
-    description="Especialista em compliance e leis de defesa do consumidor.",
-    instructions_file="prompts/juridico.md",
-    db_url=supabase_db_url,
-    num_history_runs=3
-)
+juridico = create_agent(name="juridico", model=get_model("openai", id="gpt-5-nano"), description="Especialista em compliance e leis de defesa do consumidor.", instructions_file="prompts/juridico.md", db_url=supabase_db_url, num_history_runs=3)
 
-agente_pdf = create_agent(
-    name="agente_pdf",
-    model=get_model("openai", id="gpt-5-nano"),
-    description="Agente especializado em ler, analisar e extrair informações precisas de PDFs.",
-    knowledge=pdf_knowledge,
-    search_knowledge=True,
-    instructions_file="prompts/agente_pdf.md",
-    db_url=supabase_db_url,
-    num_history_runs=3
-)
+agente_pdf = create_agent(name="agente_pdf", model=get_model("openai", id="gpt-5-nano"), description="Agente especializado em ler, analisar e extrair informações precisas de PDFs.", knowledge=pdf_knowledge, search_knowledge=True, instructions_file="prompts/agente_pdf.md", db_url=supabase_db_url, num_history_runs=3)
 
-criador_experts = create_agent(
-    name="criador_experts",
-    model=get_model("openai", id="gpt-5-nano"),
-    description="Agente estrategista para criar Personas e Big Ideas.",
-    instructions_file="prompts/criador_experts.md",
-    db_url=supabase_db_url
-)
+criador_experts = create_agent(name="criador_experts", model=get_model("openai", id="gpt-5-nano"), description="Agente estrategista para criar Personas e Big Ideas.", instructions_file="prompts/criador_experts.md", db_url=supabase_db_url)
 
 criador_midia = create_agent(
     name="criador_midia",
@@ -182,7 +147,7 @@ criador_midia = create_agent(
     tools=[gerar_imagem, gerar_video, consultar_status_video],
     instructions_file="prompts/criador_midia.md",
     db_url=supabase_db_url,
-    num_history_runs=10
+    num_history_runs=10,
 )
 
 # --- DELEGAÇÃO DE TAREFAS (FERRAMENTAS PARA O ORQUESTRADOR) ---
