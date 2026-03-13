@@ -107,7 +107,11 @@ def gerar_video(prompt: str, image_url: str = None) -> str:
                     "output_path": output_path,
                 }
                 _save_jobs(jobs)
-                return f"VÍDEO ENVIADO PARA A FILA COM SUCESSO! O vídeo está sendo gerado pela nuvem. Job ID (Operação): '{job_id}'. Salve esse ID! Use a ferramenta 'consultar_status_video' com esse ID para verificar se o vídeo está pronto e fazer o download final. O aviso atual é apenas de envio, o arquivo ainda não existe."
+                return (
+                    f"VÍDEO ENVIADO PARA A FILA COM SUCESSO! O vídeo está sendo gerado pela nuvem. Job ID (Operação): '{job_id}'. "
+                    "Salve esse ID! Use a ferramenta 'consultar_status_video' com esse ID para verificar se o vídeo está pronto e "
+                    "fazer o download final. O aviso atual é apenas de envio, o arquivo ainda não existe."
+                )
             else:
                 return "O comando foi enviado, mas não recebi um Job ID rastreável da API. Talvez o modelo não suporte operações assíncronas no momento."
 
