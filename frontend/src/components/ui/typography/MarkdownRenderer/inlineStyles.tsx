@@ -158,7 +158,7 @@ const Img = ({ src, alt }: ImgProps) => {
   return (
     <div className="w-full max-w-xl">
       {error ? (
-        <div className="flex h-40 flex-col items-center justify-center gap-2 rounded-md bg-secondary/50 text-muted">
+        <div className="bg-secondary/50 flex h-40 flex-col items-center justify-center gap-2 rounded-md text-muted">
           <Paragraph className="text-primary">Image unavailable</Paragraph>
           <Link
             href={srcString}

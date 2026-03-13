@@ -123,7 +123,7 @@ const HorizontalRule = ({ className, ...props }: HorizontalRuleProps) => (
 
 const InlineCode: FC<PreparedTextProps> = ({ children }) => {
   return (
-    <code className="relative whitespace-pre-wrap rounded-sm bg-background-secondary/50 p-1">
+    <code className="bg-background-secondary/50 relative whitespace-pre-wrap rounded-sm p-1">
       {children}
     </code>
   )
@@ -184,7 +184,7 @@ const Img = ({ src, alt }: ImgProps) => {
   return (
     <div className="w-full max-w-xl">
       {error ? (
-        <div className="flex h-40 flex-col items-center justify-center gap-2 rounded-md bg-secondary/50 text-muted">
+        <div className="bg-secondary/50 flex h-40 flex-col items-center justify-center gap-2 rounded-md text-muted">
           <Paragraph className="text-primary">Image unavailable</Paragraph>
           <Link
             href={srcString}

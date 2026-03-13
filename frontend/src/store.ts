@@ -102,7 +102,8 @@ export const useStore = create<Store>()(
             typeof messages === 'function' ? messages(state.messages) : messages
         })),
       chatInputRef: { current: null },
-      selectedEndpoint: process.env.NEXT_PUBLIC_DEFAULT_ENDPOINT || 'http://localhost:8000',
+      selectedEndpoint:
+        process.env.NEXT_PUBLIC_DEFAULT_ENDPOINT || 'http://localhost:8000',
       setSelectedEndpoint: (selectedEndpoint) =>
         set(() => ({ selectedEndpoint })),
       authToken: '',
@@ -148,7 +149,8 @@ export const useStore = create<Store>()(
           return {
             folders: newFolders,
             sessionFolders: newSessionFolders,
-            activeFolderId: state.activeFolderId === folderId ? null : state.activeFolderId
+            activeFolderId:
+              state.activeFolderId === folderId ? null : state.activeFolderId
           }
         }),
 

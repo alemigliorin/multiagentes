@@ -1,8 +1,15 @@
+import logging
 import os
-import logging # Added for logging
+import re
+import shutil
+import time
+import traceback
+from pathlib import Path
 
 from agno.agent import Agent
 from agno.db.postgres import PostgresDb
+from agno.knowledge.knowledge import Knowledge
+from agno.knowledge.reader.pdf_reader import PDFReader
 from agno.models.anthropic import Claude
 from agno.models.deepseek import DeepSeek
 from agno.models.google import Gemini
@@ -10,12 +17,13 @@ from agno.models.groq import Groq
 from agno.models.openai import OpenAIChat
 from agno.os import AgentOS
 from agno.tools.tavily import TavilyTools
-from agno.tools.yfinance import YFinanceTools
-from agno.knowledge.knowledge import Knowledge # Added
-from agno.knowledge.reader.pdf_reader import PDFReader # Added
 from agno.vectordb.pgvector import PgVector
 from dotenv import load_dotenv
+from fastapi import File, Form, UploadFile
+from fastapi.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
 
+from auth import auth_middleware
 from media_tools import consultar_status_video, gerar_imagem, gerar_video
 from reels_tools import get_creator_transcripts, list_available_creators
 
@@ -42,15 +50,17 @@ def get_model(provider: str = "openai", **kwargs):
     # Default fallback
     return OpenAIChat(id="gpt-4o")
 
+
 # --- SETUP DO BANCO DE DADOS VETORIAL (RAG PARA PDF) ---
 pdf_vector_db = PgVector(table_name="pdf_documents", db_url=os.getenv("SUPABASE_DB_URL"))
 pdf_knowledge = Knowledge(vector_db=pdf_vector_db)
+
 
 # --- FERRAMENTAS DE PESQUISA CUSTOMIZADAS ---
 def busca_rapida(query: str) -> str:
     """Usa a busca rápida e cirúrgica do Tavily para fatos simples, placares, cotações e notícias diárias.
     Extremamente rápida e imune a falhas de timeout.
-    
+
     Args:
         query (str): A consulta de pesquisa.
     """
@@ -60,10 +70,11 @@ def busca_rapida(query: str) -> str:
     except Exception as e:
         return f"Erro na busca rápida: {e}"
 
+
 def busca_profunda(query: str) -> str:
     """Busca profunda na internet usando Tavily. USE APENAS para pesquisa de conteúdo, análise de concorrentes ou quando precisar ler artigos densos.
     Atenção: É lenta e tem risco de timeout se usada muitas vezes.
-    
+
     Args:
         query (str): A consulta de pesquisa detalhada.
     """
@@ -72,6 +83,7 @@ def busca_profunda(query: str) -> str:
         return tavily.web_search_using_tavily(query)
     except Exception as e:
         return f"Erro na busca profunda: {e}"
+
 
 # --- INSTANCIANDO OS AGENTES ESPECIALISTAS ---
 
@@ -100,10 +112,10 @@ copywriter = Agent(
 juridico = Agent(
     model=get_model("openai", id="gpt-5-nano"),
     name="juridico",
-    description="Especialista em compliance e leis de defesa do consumidor.", # Modified description
+    description="Especialista em compliance e leis de defesa do consumidor.",  # Modified description
     instructions=open("prompts/juridico.md", encoding="utf-8").read(),
     add_history_to_context=True,
-    num_history_runs=3, # Modified num_history_runs
+    num_history_runs=3,  # Modified num_history_runs
     db=PostgresDb(session_table="sessions", db_url=os.getenv("SUPABASE_DB_URL")),
 )
 
@@ -151,7 +163,6 @@ def acionar_pesquisador(query: str) -> str:
     Args:
         query (str): A pergunta, tópico ou instrução exata para a pesquisa na web.
     """
-    import time
     start_time = time.time()
     print(f"--- Iniciando pesquisa: {query} ---")
     response = pesquisador.run(query)
@@ -199,6 +210,7 @@ def acionar_criador_midia(instrucao: str) -> str:
     response = criador_midia.run(instrucao)
     return response.content
 
+
 # --- DELEGAÇÃO DE TAREFAS (FERRAMENTAS PARA O ORQUESTRADOR) --- # Added
 def acionar_agente_pdf(query: str) -> str:
     """Delega a tarefa de consulta e análise de documentos internos corporativos (PDFs) locais ao Agente PDF.
@@ -210,10 +222,18 @@ def acionar_agente_pdf(query: str) -> str:
     response = agente_pdf.run(query)
     return response.content
 
+
 # --- INSTANCIANDO O ORQUESTRADOR ---
 orquestrador = Agent(
     model=get_model("openai", id="gpt-5-mini"),  # GPT-5 mini atua como líder da orquestração
-    tools=[acionar_pesquisador, acionar_copywriter, acionar_juridico, acionar_criador_experts, acionar_criador_midia, acionar_agente_pdf], # Added acionar_agente_pdf
+    tools=[
+        acionar_pesquisador,
+        acionar_copywriter,
+        acionar_juridico,
+        acionar_criador_experts,
+        acionar_criador_midia,
+        acionar_agente_pdf,
+    ],  # Added acionar_agente_pdf
     name="orquestrador",
     description="Você é o Líder da Equipe e principal contato. Você delega tarefas e consolida o resultado final.",
     instructions=open("prompts/orquestrador.md", encoding="utf-8").read(),
@@ -230,30 +250,22 @@ try:
     logging.info("Carregando PDF da Grendene no Banco de Conhecimento...")
     pdf_knowledge.add_content(
         url="https://s3.sa-east-1.amazonaws.com/static.grendene.aatb.com.br/releases/2417_2T25.pdf",
-        metadata={"source": "Grendene", "type":"pdf", "description": "Relatório Trimestral 2T25"},
+        metadata={"source": "Grendene", "type": "pdf", "description": "Relatório Trimestral 2T25"},
         skip_if_exists=True,
-        reader=PDFReader()
+        reader=PDFReader(),
     )
     logging.info("PDF carregado/verificado!")
 except Exception as e:
     logging.error(f"Erro ao carregar PDF: {e}")
 
 
-allowed_origins = os.getenv("CORS_ORIGINS", "http://localhost:3001,http://localhost:3000,http://127.0.0.1:3001").split(
-    ","
-)
+allowed_origins = os.getenv("CORS_ORIGINS", "http://localhost:3001,http://localhost:3000,http://127.0.0.1:3001").split(",")
 # Expondo apenas o orquestrador no AgentOS
 agent_os = AgentOS(agents=[orquestrador], cors_allowed_origins=allowed_origins)
 app = agent_os.get_app()
 
-from starlette.middleware.base import BaseHTTPMiddleware
-from auth import auth_middleware
-from fastapi import File, UploadFile, Form
-from fastapi.responses import JSONResponse
-import shutil
-from pathlib import Path
-
 app.add_middleware(BaseHTTPMiddleware, dispatch=auth_middleware)
+
 
 @app.post("/upload-pdf")
 async def upload_pdf(file: UploadFile = File(...), save_to_rag: str = Form("false")):
@@ -261,16 +273,13 @@ async def upload_pdf(file: UploadFile = File(...), save_to_rag: str = Form("fals
         temp_dir = Path("tmp/uploads")
         temp_dir.mkdir(parents=True, exist_ok=True)
         file_path = temp_dir / file.filename
-        
+
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
-            
+
         if save_to_rag.lower() == "true":
             # Salvar no banco vetorial
-            pdf_knowledge.add_content(
-                path=str(file_path),
-                reader=PDFReader()
-            )
+            pdf_knowledge.add_content(path=str(file_path), reader=PDFReader())
             file_path.unlink()
             return {"status": "success", "mode": "rag", "message": "Salvo na Base de Dados"}
         else:
@@ -280,32 +289,30 @@ async def upload_pdf(file: UploadFile = File(...), save_to_rag: str = Form("fals
             extracted_text = "\n\n".join([doc.content for doc in documents if doc.content])
             file_path.unlink()
             return {"status": "success", "mode": "temporary", "extracted_text": extracted_text}
-            
+
     except Exception as e:
-        import traceback
         traceback.print_exc()
         return JSONResponse(status_code=500, content={"error": str(e)})
+
 
 @app.post("/upload-video")
 async def upload_video(file: UploadFile = File(...), creator_name: str = Form(...)):
     try:
         if not creator_name.strip():
             return JSONResponse(status_code=400, content={"error": "Nome do criador é obrigatório"})
-            
-        import re
-        safe_creator_name = re.sub(r'[^a-zA-Z0-9_\-]', '', creator_name.replace(' ', '_').lower())
-        
+
+        safe_creator_name = re.sub(r"[^a-zA-Z0-9_\-]", "", creator_name.replace(" ", "_").lower())
+
         video_dir = Path(f"videos/{safe_creator_name}")
         video_dir.mkdir(parents=True, exist_ok=True)
-        
+
         file_path = video_dir / file.filename
-        
+
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
-            
+
         return {"status": "success", "message": f"Vídeo salvo em {file_path}", "path": str(file_path)}
-        
+
     except Exception as e:
-        import traceback
         traceback.print_exc()
         return JSONResponse(status_code=500, content={"error": str(e)})

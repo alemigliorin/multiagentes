@@ -3,12 +3,12 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from agent import (
+    acionar_agente_pdf,
     acionar_copywriter,
     acionar_criador_experts,
     acionar_criador_midia,
     acionar_juridico,
     acionar_pesquisador,
-    acionar_agente_pdf,
 )
 
 

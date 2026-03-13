@@ -6,6 +6,7 @@ def mock_env(monkeypatch):
     """Garante que nenhuma Key real seja usada durante os testes e define placeholders."""
     # Só sobrescreve se não estiver rodando no modo de gravação do VCR (pois gravar precisa da key real)
     import os
+
     if not os.environ.get("VCR_RECORD"):
         monkeypatch.setenv("OPENAI_API_KEY", "test-openai-key")
         monkeypatch.setenv("ANTHROPIC_API_KEY", "test-anthropic-key")
@@ -51,7 +52,5 @@ def sample_transcriptions():
                 "transcricao": "Another dummy transcript of a video.",
             },
         ],
-        "kallaway": [
-            {"arquivo": "vidA.mp4", "caminho_completo": "videos/kallaway/vidA.mp4", "transcricao": "AI news for today."}
-        ],
+        "kallaway": [{"arquivo": "vidA.mp4", "caminho_completo": "videos/kallaway/vidA.mp4", "transcricao": "AI news for today."}],
     }

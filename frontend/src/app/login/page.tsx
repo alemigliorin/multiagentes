@@ -13,9 +13,9 @@ export default function LoginPage() {
     e.preventDefault()
     setIsLoading(true)
     setError(null)
-    
+
     const formData = new FormData(e.currentTarget)
-    
+
     try {
       if (isLogin) {
         const result = await login(formData)
@@ -36,64 +36,76 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-sidebar-bg font-geist relative overflow-hidden">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-sidebar-bg font-geist">
       {/* Dynamic Background Elements */}
-      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-brand blur-[120px] opacity-20 rounded-full animate-pulse" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-purple-500 blur-[120px] opacity-20 rounded-full animate-pulse delay-1000" />
-      
-      <div className="w-full max-w-md p-8 sm:p-10 rounded-2xl border border-input-border bg-card/60 backdrop-blur-xl shadow-2xl relative z-10 transition-all duration-300 hover:shadow-brand/10">
-        <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 bg-brand rounded-xl flex items-center justify-center mb-4 text-white text-2xl font-bold shadow-lg">
+      <div className="absolute left-[-10%] top-[-10%] h-96 w-96 animate-pulse rounded-full bg-brand opacity-20 blur-[120px]" />
+      <div className="absolute bottom-[-10%] right-[-10%] h-96 w-96 animate-pulse rounded-full bg-purple-500 opacity-20 blur-[120px] delay-1000" />
+
+      <div className="bg-card/60 hover:shadow-brand/10 relative z-10 w-full max-w-md rounded-2xl border border-input-border p-8 shadow-2xl backdrop-blur-xl transition-all duration-300 sm:p-10">
+        <div className="mb-8 flex flex-col items-center">
+          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-brand text-2xl font-bold text-white shadow-lg">
             M
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+          <h1 className="to-foreground/70 bg-gradient-to-r from-foreground bg-clip-text text-3xl font-bold tracking-tight text-foreground">
             Migliorin-Labs
           </h1>
-          <p className="text-sm text-muted-foreground mt-2 text-center">
-            {isLogin 
-              ? 'Faça login para continuar sua experiência' 
+          <p className="mt-2 text-center text-sm text-muted-foreground">
+            {isLogin
+              ? 'Faça login para continuar sua experiência'
               : 'Crie uma conta para começar a usar os Agentes'}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-foreground/80" htmlFor="email">E-mail</label>
+            <label
+              className="text-foreground/80 text-sm font-medium"
+              htmlFor="email"
+            >
+              E-mail
+            </label>
             <input
               id="email"
               name="email"
               type="email"
               required
-              className="w-full px-4 py-3 rounded-xl border border-input-border bg-sidebar-bg/50 text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-brand/50 transition-all shadow-sm"
+              className="bg-sidebar-bg/50 focus:ring-brand/50 w-full rounded-xl border border-input-border px-4 py-3 text-foreground shadow-sm transition-all placeholder:text-muted focus:outline-none focus:ring-2"
               placeholder="seu@email.com"
             />
           </div>
-          
+
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-foreground/80" htmlFor="password">Senha</label>
+            <label
+              className="text-foreground/80 text-sm font-medium"
+              htmlFor="password"
+            >
+              Senha
+            </label>
             <input
               id="password"
               name="password"
               type="password"
               required
-              className="w-full px-4 py-3 rounded-xl border border-input-border bg-sidebar-bg/50 text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-brand/50 transition-all shadow-sm"
+              className="bg-sidebar-bg/50 focus:ring-brand/50 w-full rounded-xl border border-input-border px-4 py-3 text-foreground shadow-sm transition-all placeholder:text-muted focus:outline-none focus:ring-2"
               placeholder="••••••••"
             />
           </div>
 
           {error && (
-            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-sm text-center animate-in fade-in slide-in-from-top-1">
+            <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-center text-sm text-red-500 animate-in fade-in slide-in-from-top-1">
               {error}
             </div>
           )}
 
-          <Button 
-            formAction={isLogin ? login : signup} 
-            className="w-full py-6 mt-6 rounded-xl bg-brand hover:bg-brand/90 text-white font-medium text-lg transition-all shadow-lg hover:shadow-brand/25 relative overflow-hidden group"
+          <Button
+            type="submit"
+            className="hover:bg-brand/90 hover:shadow-brand/25 group relative mt-6 w-full overflow-hidden rounded-xl bg-brand py-6 text-lg font-medium text-white shadow-lg transition-all"
             disabled={isLoading}
           >
-            <span className="relative z-10">{isLoading ? 'Carregando...' : (isLogin ? 'Entrar' : 'Criar Conta')}</span>
-            <div className="absolute inset-0 h-full w-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
+            <span className="relative z-10">
+              {isLoading ? 'Carregando...' : isLogin ? 'Entrar' : 'Criar Conta'}
+            </span>
+            <div className="absolute inset-0 h-full w-full -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-[shimmer_1.5s_infinite]" />
           </Button>
         </form>
 
@@ -104,9 +116,11 @@ export default function LoginPage() {
               setIsLogin(!isLogin)
               setError(null)
             }}
-            className="text-sm text-brand hover:text-brand/80 transition-colors font-medium"
+            className="hover:text-brand/80 text-sm font-medium text-brand transition-colors"
           >
-            {isLogin ? "Não possui uma conta? Crie uma aqui" : 'Já tem uma conta? Faça login'}
+            {isLogin
+              ? 'Não possui uma conta? Crie uma aqui'
+              : 'Já tem uma conta? Faça login'}
           </button>
         </div>
       </div>

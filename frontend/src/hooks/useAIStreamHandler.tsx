@@ -167,8 +167,10 @@ const useAIChatStreamHandler = () => {
         const headers: Record<string, string> = {}
         const { createClient } = await import('@/utils/supabase/client')
         const supabase = createClient()
-        const { data: { session: currentSession } } = await supabase.auth.getSession()
-        
+        const {
+          data: { session: currentSession }
+        } = await supabase.auth.getSession()
+
         if (currentSession?.access_token) {
           headers['Authorization'] = `Bearer ${currentSession.access_token}`
         } else if (authToken) {

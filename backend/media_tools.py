@@ -22,7 +22,7 @@ def _load_jobs() -> dict:
     try:
         with open(VEO_JOBS_FILE) as f:
             return json.load(f)
-    except:
+    except Exception:
         return {}
 
 
@@ -95,9 +95,7 @@ def gerar_video(prompt: str, image_url: str = None) -> str:
         # de Models para vídeo.
         try:
             # Retorna no LRO (Long Running Operation)
-            result = client.models.generate_videos(
-                model="veo-3.1-fast-generate-preview", prompt=prompt, config={"aspect_ratio": "16:9"}
-            )
+            result = client.models.generate_videos(model="veo-3.1-fast-generate-preview", prompt=prompt, config={"aspect_ratio": "16:9"})
 
             if result and hasattr(result, "name") and result.name:
                 job_id = result.name

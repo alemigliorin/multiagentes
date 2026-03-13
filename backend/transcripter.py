@@ -20,10 +20,7 @@ def get_ffmpeg_path() -> str:
     if path:
         return path
 
-    raise FileNotFoundError(
-        "ffmpeg não encontrado no PATH. Instale com 'apt-get install ffmpeg' (Linux) "
-        "ou 'winget install Gyan.FFmpeg' (Windows)."
-    )
+    raise FileNotFoundError("ffmpeg não encontrado no PATH. Instale com 'apt-get install ffmpeg' (Linux) ou 'winget install Gyan.FFmpeg' (Windows).")
 
 
 def extract_audio(video_path: Path, audio_path: Path):
@@ -88,9 +85,7 @@ def process_directory(base_dir: str = "videos", output_json: str = "transcricoes
                 if creator not in transcriptions:
                     transcriptions[creator] = []
 
-                transcriptions[creator].append(
-                    {"arquivo": video_path.name, "caminho_completo": str(video_path), "transcricao": text}
-                )
+                transcriptions[creator].append({"arquivo": video_path.name, "caminho_completo": str(video_path), "transcricao": text})
                 print("  -> Sucesso!")
 
             except Exception as e:

@@ -77,7 +77,7 @@ const ChatBlankState = ({ onSuggestionClick }: ChatBlankStateProps) => {
             <motion.button
               key={index}
               onClick={() => onSuggestionClick?.(suggestion.prompt)}
-              className="group flex items-start gap-3 rounded-xl border border-border bg-card p-4 text-left shadow-card transition-all hover:shadow-card-hover hover:border-brand/20"
+              className="hover:border-brand/20 group flex items-start gap-3 rounded-xl border border-border bg-card p-4 text-left shadow-card transition-all hover:shadow-card-hover"
               whileHover={{ y: -2 }}
               whileTap={{ scale: 0.98 }}
             >

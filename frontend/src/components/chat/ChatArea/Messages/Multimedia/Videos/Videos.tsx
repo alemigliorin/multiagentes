@@ -54,7 +54,7 @@ const VideoItem = memo(({ video }: { video: VideoData }) => {
         <button
           type="button"
           onClick={handleDownload}
-          className="absolute right-2 top-2 flex items-center justify-center rounded-sm bg-secondary/80 p-1.5 opacity-0 transition-opacity duration-200 hover:bg-secondary group-hover:opacity-100"
+          className="bg-secondary/80 absolute right-2 top-2 flex items-center justify-center rounded-sm p-1.5 opacity-0 transition-opacity duration-200 hover:bg-secondary group-hover:opacity-100"
           aria-label="Download GIF"
         >
           <Icon type="download" size="xs" />

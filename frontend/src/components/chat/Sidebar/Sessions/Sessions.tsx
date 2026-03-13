@@ -126,12 +126,12 @@ const Sessions = () => {
 
   const filteredSessions = useMemo(() => {
     if (!sessionsData) return []
-    
+
     let result = sessionsData
 
     if (activeFolderId !== null) {
-      result = result.filter((session) =>
-        sessionFolders[session.session_id] === activeFolderId
+      result = result.filter(
+        (session) => sessionFolders[session.session_id] === activeFolderId
       )
     }
 
@@ -158,17 +158,18 @@ const Sessions = () => {
   return (
     <div className="w-full">
       <div
-        className={`h-[calc(100vh-345px)] overflow-y-auto font-geist transition-all duration-300 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar]:transition-opacity [&::-webkit-scrollbar]:duration-300 ${isScrolling
+        className={`h-[calc(100vh-345px)] overflow-y-auto font-geist transition-all duration-300 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar]:transition-opacity [&::-webkit-scrollbar]:duration-300 ${
+          isScrolling
             ? '[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-background [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar]:opacity-0'
             : '[&::-webkit-scrollbar]:opacity-100'
-          }`}
+        }`}
         onScroll={handleScroll}
         onMouseOver={() => setIsScrolling(true)}
         onMouseLeave={handleScroll}
       >
         {!isEndpointActive ||
-          (!isSessionsLoading &&
-            (!filteredSessions || filteredSessions.length === 0)) ? (
+        (!isSessionsLoading &&
+          (!filteredSessions || filteredSessions.length === 0)) ? (
           <SessionBlankState />
         ) : (
           <div className="flex flex-col gap-y-1 pr-1">

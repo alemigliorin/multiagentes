@@ -18,7 +18,7 @@ import {
   Sun,
   Moon,
   ChevronDown,
-  Power,
+  Power
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import SearchBar from './SearchBar'
@@ -31,15 +31,15 @@ const NAV_ITEMS = [
   { icon: MessageSquare, label: 'Chats', id: 'chats' },
   { icon: Bell, label: 'Notificações', id: 'notifications' },
   { icon: HelpCircle, label: 'Ajuda', id: 'help' },
-  { icon: Settings, label: 'Configurações', id: 'settings' },
+  { icon: Settings, label: 'Configurações', id: 'settings' }
 ]
 
 const SidebarHeader = () => (
   <div className="flex items-center gap-2.5 px-1">
-    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand text-white text-sm font-bold">
+    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand text-sm font-bold text-white">
       M
     </div>
-    <span className="text-sm font-semibold text-foreground tracking-tight">
+    <span className="text-sm font-semibold tracking-tight text-foreground">
       Migliorin-Labs
     </span>
   </div>
@@ -55,12 +55,7 @@ const Sidebar = ({
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isChatsCollapsed, setIsChatsCollapsed] = useState(false)
   const { clearChat, focusChatInput, initialize } = useChatActions()
-  const {
-    messages,
-    selectedEndpoint,
-    hydrated,
-    mode
-  } = useStore()
+  const { messages, selectedEndpoint, hydrated, mode } = useStore()
   const [isMounted, setIsMounted] = useState(false)
   const { theme, setTheme } = useTheme()
 
@@ -82,7 +77,7 @@ const Sidebar = ({
           {NAV_ITEMS.map((item) => (
             <button
               key={item.id}
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-muted hover:bg-sidebar-hover hover:text-foreground transition-colors"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-sidebar-hover hover:text-foreground"
               title={item.label}
             >
               <item.icon className="h-[18px] w-[18px]" />
@@ -93,10 +88,14 @@ const Sidebar = ({
           {isMounted && (
             <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-muted hover:bg-sidebar-hover hover:text-foreground transition-colors"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-sidebar-hover hover:text-foreground"
               title="Alternar tema"
             >
-              {theme === 'dark' ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
+              {theme === 'dark' ? (
+                <Sun className="h-[18px] w-[18px]" />
+              ) : (
+                <Moon className="h-[18px] w-[18px]" />
+              )}
             </button>
           )}
           <button
@@ -104,7 +103,7 @@ const Sidebar = ({
               const { logout } = await import('@/app/login/actions')
               await logout()
             }}
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-muted hover:bg-sidebar-hover hover:text-foreground transition-colors"
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-sidebar-hover hover:text-foreground"
             title="Sair (Logout)"
           >
             <Power className="h-[18px] w-[18px]" />
@@ -130,7 +129,7 @@ const Sidebar = ({
             <SidebarHeader />
             <button
               onClick={() => setIsCollapsed(true)}
-              className="flex h-7 w-7 items-center justify-center rounded-md text-muted hover:bg-sidebar-hover hover:text-foreground transition-colors"
+              className="flex h-7 w-7 items-center justify-center rounded-md text-muted transition-colors hover:bg-sidebar-hover hover:text-foreground"
             >
               <PanelLeftClose className="h-4 w-4" />
             </button>
@@ -143,7 +142,7 @@ const Sidebar = ({
           <Button
             onClick={handleNewChat}
             disabled={messages.length === 0}
-            className="h-9 w-full rounded-lg bg-brand text-sm font-medium text-white hover:bg-brand/90 shadow-sm transition-all"
+            className="hover:bg-brand/90 h-9 w-full rounded-lg bg-brand text-sm font-medium text-white shadow-sm transition-all"
           >
             <Plus className="mr-1.5 h-4 w-4" />
             Novo Chat
@@ -165,15 +164,15 @@ const Sidebar = ({
           <div className="flex flex-col gap-0.5">
             <button
               onClick={() => setIsChatsCollapsed(!isChatsCollapsed)}
-              className="flex items-center justify-between px-1 mb-1 group cursor-pointer w-full"
+              className="group mb-1 flex w-full cursor-pointer items-center justify-between px-1"
             >
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted group-hover:text-foreground transition-colors">
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted transition-colors group-hover:text-foreground">
                 Chats
               </span>
               <motion.div
                 animate={{ rotate: isChatsCollapsed ? -90 : 0 }}
                 transition={{ duration: 0.2 }}
-                className="text-muted group-hover:text-foreground transition-colors"
+                className="text-muted transition-colors group-hover:text-foreground"
               >
                 <ChevronDown className="h-4 w-4" />
               </motion.div>
@@ -203,7 +202,7 @@ const Sidebar = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsCollapsed(false)}
-            className="absolute left-14 top-3 z-10 flex h-7 w-7 items-center justify-center rounded-md text-muted hover:bg-sidebar-hover hover:text-foreground transition-colors"
+            className="absolute left-14 top-3 z-10 flex h-7 w-7 items-center justify-center rounded-md text-muted transition-colors hover:bg-sidebar-hover hover:text-foreground"
           >
             <PanelLeft className="h-4 w-4" />
           </motion.button>

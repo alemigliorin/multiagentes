@@ -7,17 +7,21 @@ import { Button } from '@/components/ui/button'
 import { useStore } from '@/store'
 import useAIChatStreamHandler from '@/hooks/useAIStreamHandler'
 import { useQueryState } from 'nuqs'
+import { Plus, Wrench, Bot, Mic, ArrowUp, ChevronDown, X } from 'lucide-react'
 import {
-  Plus,
-  Wrench,
-  Bot,
-  Mic,
-  ArrowUp,
-  ChevronDown,
-  X
-} from 'lucide-react'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog'
 
 const ChatInput = () => {
   const { chatInputRef, folders, sessionFolders, setSessionFolder } = useStore()
@@ -45,26 +49,32 @@ const ChatInput = () => {
   const handleSubmit = async () => {
     if (!inputMessage.trim() && !selectedTempFile) return
     setIsUploadingTemp(true)
-    
+
     let messageToSend = inputMessage
-    
+
     if (selectedTempFile) {
       const toastId = toast.loading(`Analisando ${selectedTempFile.name}...`)
       try {
         const formData = new FormData()
         formData.append('file', selectedTempFile)
         formData.append('save_to_rag', 'false')
-        
+
         const { createClient } = await import('@/utils/supabase/client')
         const supabase = createClient()
-        const { data: { session: currentSession } } = await supabase.auth.getSession()
-        const token = currentSession?.access_token || useStore.getState().authToken
+        const {
+          data: { session: currentSession }
+        } = await supabase.auth.getSession()
+        const token =
+          currentSession?.access_token || useStore.getState().authToken
 
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/upload-pdf`, {
-          method: 'POST',
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-          body: formData
-        })
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/upload-pdf`,
+          {
+            method: 'POST',
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+            body: formData
+          }
+        )
         const data = await res.json()
         if (data.status === 'success') {
           messageToSend = `[DOCUMENTO TEMPORÁRIO: ${selectedTempFile.name}]\n${data.extracted_text}\n[FIM DO DOCUMENTO]\n\n${messageToSend}`
@@ -98,85 +108,110 @@ const ChatInput = () => {
   const handleRagUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const toastId = toast.loading(`Enviando ${file.name} para a Base Global (RAG)...`)
+    const toastId = toast.loading(
+      `Enviando ${file.name} para a Base Global (RAG)...`
+    )
     try {
-        const formData = new FormData()
-        formData.append('file', file)
-        formData.append('save_to_rag', 'true')
-        
-        const { createClient } = await import('@/utils/supabase/client')
-        const supabase = createClient()
-        const { data: { session: currentSession } } = await supabase.auth.getSession()
-        const token = currentSession?.access_token || useStore.getState().authToken
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('save_to_rag', 'true')
 
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/upload-pdf`, {
+      const { createClient } = await import('@/utils/supabase/client')
+      const supabase = createClient()
+      const {
+        data: { session: currentSession }
+      } = await supabase.auth.getSession()
+      const token =
+        currentSession?.access_token || useStore.getState().authToken
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/upload-pdf`,
+        {
           method: 'POST',
           headers: token ? { Authorization: `Bearer ${token}` } : {},
           body: formData
-        })
-        const data = await res.json()
-        if (data.status === 'success') {
-           toast.success('Documento salvo e indexado na base de conhecimento!', { id: toastId })
-        } else {
-           toast.error(data.error || 'Erro ao indexar no RAG', { id: toastId })
         }
+      )
+      const data = await res.json()
+      if (data.status === 'success') {
+        toast.success('Documento salvo e indexado na base de conhecimento!', {
+          id: toastId
+        })
+      } else {
+        toast.error(data.error || 'Erro ao indexar no RAG', { id: toastId })
+      }
     } catch (err) {
-        toast.error('Erro de conexão com o servidor', { id: toastId })
+      toast.error('Erro de conexão com o servidor', { id: toastId })
     }
     if (ragFileInputRef.current) ragFileInputRef.current.value = ''
   }
 
   const handleVideoSubmit = async () => {
     if (!videoCreatorName.trim() || !selectedVideoFile) {
-        toast.error('Preencha o nome do criador e selecione um vídeo.')
-        return
+      toast.error('Preencha o nome do criador e selecione um vídeo.')
+      return
     }
     setIsUploadingVideo(true)
-    const toastId = toast.loading(`Enviando ${selectedVideoFile.name} para a pasta de ${videoCreatorName}...`)
+    const toastId = toast.loading(
+      `Enviando ${selectedVideoFile.name} para a pasta de ${videoCreatorName}...`
+    )
     try {
-        const formData = new FormData()
-        formData.append('file', selectedVideoFile)
-        formData.append('creator_name', videoCreatorName)
-        
-        const { createClient } = await import('@/utils/supabase/client')
-        const supabase = createClient()
-        const { data: { session: currentSession } } = await supabase.auth.getSession()
-        const token = currentSession?.access_token || useStore.getState().authToken
+      const formData = new FormData()
+      formData.append('file', selectedVideoFile)
+      formData.append('creator_name', videoCreatorName)
 
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/upload-video`, {
+      const { createClient } = await import('@/utils/supabase/client')
+      const supabase = createClient()
+      const {
+        data: { session: currentSession }
+      } = await supabase.auth.getSession()
+      const token =
+        currentSession?.access_token || useStore.getState().authToken
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/upload-video`,
+        {
           method: 'POST',
           headers: token ? { Authorization: `Bearer ${token}` } : {},
           body: formData
-        })
-        const data = await res.json()
-        if (data.status === 'success') {
-           toast.success('Vídeo salvo com sucesso para transcrição futura!', { id: toastId })
-           setIsVideoModalOpen(false)
-           setVideoCreatorName('')
-           setSelectedVideoFile(null)
-        } else {
-           toast.error(data.error || 'Erro ao salvar o vídeo', { id: toastId })
         }
+      )
+      const data = await res.json()
+      if (data.status === 'success') {
+        toast.success('Vídeo salvo com sucesso para transcrição futura!', {
+          id: toastId
+        })
+        setIsVideoModalOpen(false)
+        setVideoCreatorName('')
+        setSelectedVideoFile(null)
+      } else {
+        toast.error(data.error || 'Erro ao salvar o vídeo', { id: toastId })
+      }
     } catch (err) {
-        toast.error('Erro de conexão ao enviar o vídeo', { id: toastId })
+      toast.error('Erro de conexão ao enviar o vídeo', { id: toastId })
     }
     setIsUploadingVideo(false)
     if (videoFileInputRef.current) videoFileInputRef.current.value = ''
   }
 
-  const currentFolderId = sessionId ? (sessionFolders[sessionId] || '') : ''
+  const currentFolderId = sessionId ? sessionFolders[sessionId] || '' : ''
 
   return (
     <div className="mx-auto w-full max-w-2xl pb-4">
       {/* Input Card */}
       <div className="rounded-2xl border border-input-border bg-card shadow-input">
-        
         {/* Attachment Pill */}
         {selectedTempFile && (
-          <div className="px-4 pt-4 pb-1">
-            <div className="flex items-center gap-2 rounded-md bg-transparent border border-brand/30 px-3 py-1.5 text-xs text-foreground w-max shadow-sm">
-              <span className="max-w-[200px] truncate">{selectedTempFile.name}</span>
-              <button disabled={isUploadingTemp} onClick={() => setSelectedTempFile(null)} className="hover:text-red-500 transition-colors">
+          <div className="px-4 pb-1 pt-4">
+            <div className="border-brand/30 flex w-max items-center gap-2 rounded-md border bg-transparent px-3 py-1.5 text-xs text-foreground shadow-sm">
+              <span className="max-w-[200px] truncate">
+                {selectedTempFile.name}
+              </span>
+              <button
+                disabled={isUploadingTemp}
+                onClick={() => setSelectedTempFile(null)}
+                className="transition-colors hover:text-red-500"
+              >
                 <X className="h-3.5 w-3.5" />
               </button>
             </div>
@@ -201,7 +236,7 @@ const ChatInput = () => {
                 handleSubmit()
               }
             }}
-            className="w-full resize-none border-0 bg-transparent p-0 text-sm text-foreground placeholder:text-muted focus:ring-0 focus:outline-none"
+            className="w-full resize-none border-0 bg-transparent p-0 text-sm text-foreground placeholder:text-muted focus:outline-none focus:ring-0"
             disabled={!(selectedAgent || teamId) || isUploadingTemp}
             ref={chatInputRef}
           />
@@ -211,36 +246,57 @@ const ChatInput = () => {
         <div className="flex items-center justify-between px-3 pb-2.5 pt-1">
           <div className="flex items-center gap-1">
             {/* Plus button */}
-            <input type="file" accept=".pdf" className="hidden" ref={tempFileInputRef} onChange={(e) => setSelectedTempFile(e.target.files?.[0] || null)} />
+            <input
+              type="file"
+              accept=".pdf"
+              className="hidden"
+              ref={tempFileInputRef}
+              onChange={(e) => setSelectedTempFile(e.target.files?.[0] || null)}
+            />
             <button
               onClick={() => tempFileInputRef.current?.click()}
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-muted hover:bg-sidebar-hover hover:text-foreground transition-colors"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-muted transition-colors hover:bg-sidebar-hover hover:text-foreground"
               title="Anexar arquivo PDF temporário"
             >
               <Plus className="h-4 w-4" />
             </button>
 
             {/* Ferramentas button */}
-            <input type="file" accept=".pdf" className="hidden" ref={ragFileInputRef} onChange={handleRagUpload} />
+            <input
+              type="file"
+              accept=".pdf"
+              className="hidden"
+              ref={ragFileInputRef}
+              onChange={handleRagUpload}
+            />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-sm text-muted hover:bg-sidebar-hover hover:text-foreground transition-colors outline-none ring-0">
+                <button className="flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-sm text-muted outline-none ring-0 transition-colors hover:bg-sidebar-hover hover:text-foreground">
                   <Wrench className="h-3.5 w-3.5" />
                   <span className="text-xs font-medium">Ferramentas</span>
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-64 bg-background border-border shadow-md rounded-xl p-1 z-50">
-                <DropdownMenuItem className="cursor-pointer rounded-lg px-3 py-2 text-sm hover:bg-sidebar-hover focus:bg-sidebar-hover text-foreground" onClick={() => ragFileInputRef.current?.click()}>
-                   Adicionar ao RAG Global (PDF)
+              <DropdownMenuContent
+                align="start"
+                className="z-50 w-64 rounded-xl border-border bg-background p-1 shadow-md"
+              >
+                <DropdownMenuItem
+                  className="cursor-pointer rounded-lg px-3 py-2 text-sm text-foreground hover:bg-sidebar-hover focus:bg-sidebar-hover"
+                  onClick={() => ragFileInputRef.current?.click()}
+                >
+                  Adicionar ao RAG Global (PDF)
                 </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer rounded-lg px-3 py-2 text-sm hover:bg-sidebar-hover focus:bg-sidebar-hover text-foreground" onClick={() => setIsVideoModalOpen(true)}>
-                   Upload de Vídeo (Transcrição)
+                <DropdownMenuItem
+                  className="cursor-pointer rounded-lg px-3 py-2 text-sm text-foreground hover:bg-sidebar-hover focus:bg-sidebar-hover"
+                  onClick={() => setIsVideoModalOpen(true)}
+                >
+                  Upload de Vídeo (Transcrição)
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
             {/* Experts button */}
-            <button className="flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-sm text-muted hover:bg-sidebar-hover hover:text-foreground transition-colors hidden">
+            <button className="flex hidden h-8 items-center gap-1.5 rounded-lg px-2.5 text-sm text-muted transition-colors hover:bg-sidebar-hover hover:text-foreground">
               <Bot className="h-3.5 w-3.5" />
               <span className="text-xs font-medium">Experts</span>
               <ChevronDown className="h-3 w-3" />
@@ -255,7 +311,11 @@ const ChatInput = () => {
                 onChange={(e) => {
                   const val = e.target.value
                   setSessionFolder(sessionId, val === '' ? null : val)
-                  toast.success(val === '' ? 'Chat removido da pasta' : 'Chat movido para a pasta')
+                  toast.success(
+                    val === ''
+                      ? 'Chat removido da pasta'
+                      : 'Chat movido para a pasta'
+                  )
                 }}
                 className="h-8 max-w-[120px] rounded-lg border border-border bg-sidebar-bg px-2 text-xs text-muted-foreground outline-none focus:ring-1 focus:ring-brand"
                 title="Mover para Projeto"
@@ -273,11 +333,14 @@ const ChatInput = () => {
             <Button
               onClick={handleSubmit}
               disabled={
-                (!(selectedAgent || teamId) || !inputMessage.trim() || isStreaming || isUploadingTemp) &&
+                (!(selectedAgent || teamId) ||
+                  !inputMessage.trim() ||
+                  isStreaming ||
+                  isUploadingTemp) &&
                 !selectedTempFile
               }
               size="icon"
-              className="h-8 w-8 rounded-lg bg-brand text-white hover:bg-brand/90 disabled:opacity-30 transition-all"
+              className="hover:bg-brand/90 h-8 w-8 rounded-lg bg-brand text-white transition-all disabled:opacity-30"
             >
               <ArrowUp className="h-4 w-4" />
             </Button>
@@ -287,40 +350,59 @@ const ChatInput = () => {
 
       {/* Video Upload Modal */}
       <Dialog open={isVideoModalOpen} onOpenChange={setIsVideoModalOpen}>
-        <DialogContent className="sm:max-w-md bg-card border-border shadow-xl rounded-xl z-50">
+        <DialogContent className="z-50 rounded-xl border-border bg-card shadow-xl sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-foreground text-lg">Upload de Vídeo</DialogTitle>
-            <DialogDescription className="text-muted-foreground text-sm">
-              Selecione o vídeo e especifique o nome do criador para adicioná-lo à pasta do repositório.
+            <DialogTitle className="text-lg text-foreground">
+              Upload de Vídeo
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Selecione o vídeo e especifique o nome do criador para adicioná-lo
+              à pasta do repositório.
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-5 py-4">
             <div className="flex flex-col gap-2">
-              <label className="text-xs font-semibold text-foreground uppercase tracking-widest">Nome do Criador</label>
-              <input 
-                type="text" 
-                placeholder="Ex: jeffnippard" 
-                value={videoCreatorName} 
-                onChange={e => setVideoCreatorName(e.target.value)}
-                className="w-full rounded-lg border border-input-border bg-input-bg px-3 py-2 text-sm text-foreground focus:ring-1 focus:ring-brand outline-none"
+              <label className="text-xs font-semibold uppercase tracking-widest text-foreground">
+                Nome do Criador
+              </label>
+              <input
+                type="text"
+                placeholder="Ex: jeffnippard"
+                value={videoCreatorName}
+                onChange={(e) => setVideoCreatorName(e.target.value)}
+                className="w-full rounded-lg border border-input-border bg-input-bg px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-brand"
               />
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-xs font-semibold text-foreground uppercase tracking-widest">Arquivo do Vídeo</label>
-              <input 
-                type="file" 
-                accept=".mp4,.mov,.webm,.avi" 
+              <label className="text-xs font-semibold uppercase tracking-widest text-foreground">
+                Arquivo do Vídeo
+              </label>
+              <input
+                type="file"
+                accept=".mp4,.mov,.webm,.avi"
                 ref={videoFileInputRef}
-                onChange={e => setSelectedVideoFile(e.target.files?.[0] || null)}
-                className="w-full text-sm text-foreground file:mr-4 file:rounded-md file:border-0 file:bg-brand file:text-white file:cursor-pointer file:px-4 file:py-2 file:text-xs file:font-semibold hover:file:bg-brand/90 transition-colors p-2 border border-input-border rounded-lg bg-input-bg"
+                onChange={(e) =>
+                  setSelectedVideoFile(e.target.files?.[0] || null)
+                }
+                className="hover:file:bg-brand/90 w-full rounded-lg border border-input-border bg-input-bg p-2 text-sm text-foreground transition-colors file:mr-4 file:cursor-pointer file:rounded-md file:border-0 file:bg-brand file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white"
               />
             </div>
           </div>
-          <DialogFooter className="sm:justify-end gap-2 mt-2">
-            <Button variant="ghost" onClick={() => setIsVideoModalOpen(false)} className="text-muted-foreground hover:text-foreground text-sm h-9">
+          <DialogFooter className="mt-2 gap-2 sm:justify-end">
+            <Button
+              variant="ghost"
+              onClick={() => setIsVideoModalOpen(false)}
+              className="h-9 text-sm text-muted-foreground hover:text-foreground"
+            >
               Cancelar
             </Button>
-            <Button disabled={isUploadingVideo || !videoCreatorName || !selectedVideoFile} onClick={handleVideoSubmit} className="bg-brand text-white hover:bg-brand/90 text-sm h-9">
+            <Button
+              disabled={
+                isUploadingVideo || !videoCreatorName || !selectedVideoFile
+              }
+              onClick={handleVideoSubmit}
+              className="hover:bg-brand/90 h-9 bg-brand text-sm text-white"
+            >
               {isUploadingVideo ? 'Enviando...' : 'Fazer Upload'}
             </Button>
           </DialogFooter>
