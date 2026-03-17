@@ -178,7 +178,6 @@ export const useStore = create<Store>()(
       name: 'endpoint-storage',
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
-        selectedEndpoint: state.selectedEndpoint,
         folders: state.folders,
         sessionFolders: state.sessionFolders
       }),

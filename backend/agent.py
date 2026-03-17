@@ -255,7 +255,11 @@ if pdf_knowledge and not os.getenv("SKIP_PDF_LOAD"):
     except Exception as e:
         logging.error(f"Erro ao carregar PDF: {e}")
 
-allowed_origins = os.getenv("CORS_ORIGINS", "http://localhost:3001,http://localhost:3000,http://127.0.0.1:3001").split(",")
+# Configuração de CORS - No ambiente de produção, certifique-se de que CORS_ORIGINS inclua a URL do site.
+raw_origins = os.getenv("CORS_ORIGINS", "http://localhost:3001,http://localhost:3000,http://127.0.0.1:3001")
+allowed_origins = [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
+logging.info(f"CORS origins permitidas: {allowed_origins}")
+
 # Expondo apenas o orquestrador no AgentOS
 agent_os = AgentOS(agents=[orquestrador], cors_allowed_origins=allowed_origins)
 app = agent_os.get_app()
