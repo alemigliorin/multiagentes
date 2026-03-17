@@ -19,7 +19,7 @@ from agno.os import AgentOS
 from agno.tools.tavily import TavilyTools
 from agno.vectordb.pgvector import PgVector
 from dotenv import load_dotenv
-from fastapi import File, Form, UploadFile, FastAPI
+from fastapi import File, Form, UploadFile, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -260,7 +260,7 @@ if pdf_knowledge and not os.getenv("SKIP_PDF_LOAD"):
 raw_origins = os.getenv("CORS_ORIGINS", "http://localhost:3001,http://localhost:3000,http://127.0.0.1:3001")
 # Suporte a múltiplos separadores (vírgula ou ponto e vírgula) e limpeza de espaços/aspas
 allowed_origins = [
-    o.strip().strip("'").strip('"') 
+    o.strip().strip("'").strip('"').rstrip('/') 
     for o in re.split(r'[;,]', raw_origins) 
     if o.strip()
 ]
