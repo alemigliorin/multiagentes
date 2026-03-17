@@ -24,7 +24,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from auth import auth_middleware
+from auth import verify_auth
 from media_tools import consultar_status_video, gerar_imagem, gerar_video
 from reels_tools import get_creator_transcripts, list_available_creators
 
@@ -303,14 +303,32 @@ logging.info(f"🛡️ CORS: Origins permitidas configuradas: {allowed_origins}"
 agent_os = AgentOS(agents=[orquestrador], cors_allowed_origins=allowed_origins)
 app = agent_os.get_app()
 
-# Middleware para logar todas as requisições e seus Origins (útil para depurar CORS)
+# Middleware global para Logging e Autenticação
+# Usando @app.middleware("http") em vez de BaseHTTPMiddleware para garantir compatibilidade com Streaming
 @app.middleware("http")
-async def log_requests(request: Request, call_next):
+async def unified_middleware(request: Request, call_next):
+    # 1. Logging de Origin (útil para depurar CORS)
     origin = request.headers.get("origin")
     if origin:
         logging.info(f"📥 Requisição recebida de Origin: {origin}")
+    
+    # 2. Verificação de Autenticação (apenas para rotas protegidas)
+    auth_result = await verify_auth(request)
+    if isinstance(auth_result, tuple) and not auth_result[0]:
+        return JSONResponse(
+            status_code=401, 
+            content={"detail": auth_result[1]}
+        )
+    
+    # 3. Continuar para o próximo middleware/handler
     response = await call_next(request)
     return response
+
+# NOTA: Removemos app.add_middleware(CORSMiddleware, ...) manual aqui
+# pois o AgentOS já configura o CORSMiddleware internamente com cors_allowed_origins.
+# Adicionar um segundo CORSMiddleware pode causar duplicidade de headers e quebras no Streaming.
+
+
 
 # Endpoint de saúde explícito - Suportando HEAD e OPTIONS explicitamente para o Proxy da Hostinger
 @app.api_route("/health", methods=["GET", "HEAD", "OPTIONS"])
@@ -321,19 +339,6 @@ async def health_check(request: Request):
         "method": request.method,
         "allowed_origins": allowed_origins
     }
-
-
-# Middleware de Autenticação
-app.add_middleware(BaseHTTPMiddleware, dispatch=auth_middleware)
-
-# Garantindo CORS globalmente (além do que o AgentOS faz internamente)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 
 @app.post("/upload-pdf")
