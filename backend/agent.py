@@ -19,7 +19,8 @@ from agno.os import AgentOS
 from agno.tools.tavily import TavilyTools
 from agno.vectordb.pgvector import PgVector
 from dotenv import load_dotenv
-from fastapi import File, Form, UploadFile
+from fastapi import File, Form, UploadFile, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -264,7 +265,22 @@ logging.info(f"CORS origins permitidas: {allowed_origins}")
 agent_os = AgentOS(agents=[orquestrador], cors_allowed_origins=allowed_origins)
 app = agent_os.get_app()
 
+# Endpoint de saúde explícito
+@app.get("/health")
+async def health_check():
+    return {"status": "ok", "origins": allowed_origins}
+
+# Middleware de Autenticação
 app.add_middleware(BaseHTTPMiddleware, dispatch=auth_middleware)
+
+# Garantindo CORS globalmente (além do que o AgentOS faz internamente)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.post("/upload-pdf")
