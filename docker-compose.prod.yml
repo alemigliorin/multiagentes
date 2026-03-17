@@ -5,7 +5,7 @@ services:
     expose:
       - "8000"
     env_file:
-      - ./backend/.env
+      - .env
     volumes:
       - ./backend/tmp:/app/tmp
       - ./backend/videos:/app/videos
@@ -25,15 +25,17 @@ services:
         - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
         - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
         - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+        - NEXT_PUBLIC_OS_SECURITY_KEY=${NEXT_PUBLIC_OS_SECURITY_KEY}
     restart: unless-stopped
     depends_on:
       - backend
     env_file:
-      - ./frontend/.env.production
+      - .env
     environment:
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
       - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
       - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      - NEXT_PUBLIC_OS_SECURITY_KEY=${NEXT_PUBLIC_OS_SECURITY_KEY}
       - SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
       - SUPABASE_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
       - SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
