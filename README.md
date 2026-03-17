@@ -63,8 +63,18 @@ No seu servidor, execute o login para permitir que o Docker baixe as imagens pri
 echo "SEU_GITHUB_TOKEN" | docker login ghcr.io -u SEU_USUARIO_GITHUB --password-stdin
 ```
 
-### 3. Realizando o Deploy
-Subimos o projeto usando o arquivo de produção que aponta para as imagens do GHCR:
+### 3. Configuração do ambiente (.env)
+Crie um arquivo `.env` na raiz do projeto com as URLs de produção. Estas variáveis são **obrigatórias** e injetadas durante o build do frontend:
+
+```env
+NEXT_PUBLIC_API_URL=https://api.migliorinlabs.cloud
+CORS_ORIGINS=https://multiagentes.migliorinlabs.cloud,https://api.migliorinlabs.cloud
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+```
+
+### 4. Realizando o Deploy
+O script de deploy irá validar as variáveis antes de iniciar:
 
 ```bash
 # Clone o repositório (apenas para pegar os arquivos de config)
