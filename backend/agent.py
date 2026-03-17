@@ -286,7 +286,10 @@ if pdf_knowledge and not os.getenv("SKIP_PDF_LOAD"):
         logging.error(f"Erro ao carregar PDF: {e}")
 
 # Configuração de CORS - No ambiente de produção, certifique-se de que CORS_ORIGINS inclua a URL do site.
-raw_origins = os.getenv("CORS_ORIGINS", "http://localhost:3001,http://localhost:3000,http://127.0.0.1:3001")
+# Incluindo o domínio de produção por padrão para evitar quebras se o .env atrasar
+default_origins = "https://multiagentes.migliorinlabs.cloud,https://api.migliorinlabs.cloud,http://localhost:3001,http://localhost:3000,http://127.0.0.1:3001"
+raw_origins = os.getenv("CORS_ORIGINS") or default_origins
+
 # Suporte a múltiplos separadores (vírgula ou ponto e vírgula) e limpeza de espaços/aspas
 allowed_origins = [
     o.strip().strip("'").strip('"').rstrip('/') 
@@ -294,6 +297,7 @@ allowed_origins = [
     if o.strip()
 ]
 logging.info(f"🛡️ CORS: Origins permitidas configuradas: {allowed_origins}")
+
 
 # Expondo apenas o orquestrador no AgentOS
 agent_os = AgentOS(agents=[orquestrador], cors_allowed_origins=allowed_origins)
@@ -308,10 +312,16 @@ async def log_requests(request: Request, call_next):
     response = await call_next(request)
     return response
 
-# Endpoint de saúde explícito
-@app.get("/health")
-async def health_check():
-    return {"status": "ok", "message": "Backend is running resiliently"}
+# Endpoint de saúde explícito - Suportando HEAD e OPTIONS explicitamente para o Proxy da Hostinger
+@app.api_route("/health", methods=["GET", "HEAD", "OPTIONS"])
+async def health_check(request: Request):
+    return {
+        "status": "ok", 
+        "message": "Backend is running resiliently",
+        "method": request.method,
+        "allowed_origins": allowed_origins
+    }
+
 
 # Middleware de Autenticação
 app.add_middleware(BaseHTTPMiddleware, dispatch=auth_middleware)
