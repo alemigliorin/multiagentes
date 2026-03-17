@@ -67,9 +67,30 @@ def get_pdf_knowledge():
 
 pdf_knowledge = get_pdf_knowledge()
 
-# Instanciar ferramentas globalmente para evitar recriação constante
-_tavily_basic = TavilyTools(search_depth="basic", max_tokens=2000)
-_tavily_advanced = TavilyTools(search_depth="advanced")
+# Instanciar ferramentas globalmente para evitar recriação constante (Lazy Load)
+_tavily_basic = None
+_tavily_advanced = None
+
+def get_tavily_basic():
+    global _tavily_basic
+    if _tavily_basic is None:
+        try:
+            _tavily_basic = TavilyTools(search_depth="basic", max_tokens=2000)
+        except Exception as e:
+            logging.error(f"Erro ao inicializar Tavily Basic: {e}")
+            return None
+    return _tavily_basic
+
+def get_tavily_advanced():
+    global _tavily_advanced
+    if _tavily_advanced is None:
+        try:
+            _tavily_advanced = TavilyTools(search_depth="advanced")
+        except Exception as e:
+            logging.error(f"Erro ao inicializar Tavily Advanced: {e}")
+            return None
+    return _tavily_advanced
+
 
 
 # --- FERRAMENTAS DE PESQUISA CUSTOMIZADAS ---
@@ -81,9 +102,13 @@ def busca_rapida(query: str, **kwargs) -> str:
         query (str): A consulta de pesquisa.
     """
     try:
-        return _tavily_basic.web_search_using_tavily(query)
+        basic = get_tavily_basic()
+        if not basic:
+            return "Erro: TAVILY_API_KEY não configurada no ambiente (.env)."
+        return basic.web_search_using_tavily(query)
     except Exception as e:
         return f"Erro na busca rápida: {e}"
+
 
 
 def busca_profunda(query: str, **kwargs) -> str:
@@ -94,9 +119,13 @@ def busca_profunda(query: str, **kwargs) -> str:
         query (str): A consulta de pesquisa detalhada.
     """
     try:
-        return _tavily_advanced.web_search_using_tavily(query)
+        advanced = get_tavily_advanced()
+        if not advanced:
+            return "Erro: TAVILY_API_KEY não configurada no ambiente (.env)."
+        return advanced.web_search_using_tavily(query)
     except Exception as e:
         return f"Erro na busca profunda: {e}"
+
 
 
 # --- INSTANCIANDO OS AGENTES ESPECIALISTAS ---
@@ -282,11 +311,7 @@ async def log_requests(request: Request, call_next):
 # Endpoint de saúde explícito
 @app.get("/health")
 async def health_check():
-    return {
-        "status": "ok", 
-        "configured_origins": allowed_origins,
-        "environment_raw_origins": os.getenv("CORS_ORIGINS")
-    }
+    return {"status": "ok", "message": "Backend is running resiliently"}
 
 # Middleware de Autenticação
 app.add_middleware(BaseHTTPMiddleware, dispatch=auth_middleware)
