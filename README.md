@@ -20,6 +20,31 @@ Se este script terminar com sucesso, você pode fazer o `git push` com a certeza
 
 ---
 
+## 🔍 Diagnóstico e Testes de Pesquisa
+
+Se os agentes não estiverem retornando resultados de pesquisa ou se o sistema parecer lento, você pode usar a ferramenta de diagnóstico local:
+
+1.  **Acesse a pasta do backend:**
+    ```powershell
+    cd backend
+    ```
+
+2.  **Execute o teste de busca:**
+    ```powershell
+    # Windows (PowerShell)
+    $env:SKIP_PDF_LOAD="1"; uv run test_search.py
+
+    # Linux/Mac (Bash)
+    SKIP_PDF_LOAD=1 uv run test_search.py
+    ```
+
+Este script testa:
+- Conexão direta com a API do **Tavily**.
+- Capacidade do Agente **Pesquisador** em processar buscas.
+- Capacidade do **Orquestrador** em delegar tarefas e consolidar resultados.
+
+---
+
 ## 🏗️ Deployment (Hostinger / VPS)
 
 Para evitar erros de compilação no servidor, utilizamos imagens pré-compiladas hospedadas no **GitHub Container Registry (GHCR)**.

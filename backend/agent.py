@@ -66,9 +66,13 @@ def get_pdf_knowledge():
 
 pdf_knowledge = get_pdf_knowledge()
 
+# Instanciar ferramentas globalmente para evitar recriação constante
+_tavily_basic = TavilyTools(search_depth="basic", max_tokens=2000)
+_tavily_advanced = TavilyTools(search_depth="advanced")
+
 
 # --- FERRAMENTAS DE PESQUISA CUSTOMIZADAS ---
-def busca_rapida(query: str) -> str:
+def busca_rapida(query: str, **kwargs) -> str:
     """Usa a busca rápida e cirúrgica do Tavily para fatos simples, placares, cotações e notícias diárias.
     Extremamente rápida e imune a falhas de timeout.
 
@@ -76,13 +80,12 @@ def busca_rapida(query: str) -> str:
         query (str): A consulta de pesquisa.
     """
     try:
-        tavily = TavilyTools(search_depth="basic", max_tokens=2000)
-        return tavily.web_search_using_tavily(query)
+        return _tavily_basic.web_search_using_tavily(query)
     except Exception as e:
         return f"Erro na busca rápida: {e}"
 
 
-def busca_profunda(query: str) -> str:
+def busca_profunda(query: str, **kwargs) -> str:
     """Busca profunda na internet usando Tavily. USE APENAS para pesquisa de conteúdo, análise de concorrentes ou quando precisar ler artigos densos.
     Atenção: É lenta e tem risco de timeout se usada muitas vezes.
 
@@ -90,8 +93,7 @@ def busca_profunda(query: str) -> str:
         query (str): A consulta de pesquisa detalhada.
     """
     try:
-        tavily = TavilyTools(search_depth="advanced")
-        return tavily.web_search_using_tavily(query)
+        return _tavily_advanced.web_search_using_tavily(query)
     except Exception as e:
         return f"Erro na busca profunda: {e}"
 
@@ -153,7 +155,7 @@ criador_midia = create_agent(
 # --- DELEGAÇÃO DE TAREFAS (FERRAMENTAS PARA O ORQUESTRADOR) ---
 
 
-def acionar_pesquisador(query: str) -> str:
+def acionar_pesquisador(query: str, **kwargs) -> str:
     """Delega uma tarefa de busca de dados reais e atualizados na internet ao Pesquisador.
     NÃO USE ESTA FERRAMENTA para buscar informações em PDFs, relatórios corporativos internos (ex: relatórios trimestrais, resultados), ou documentos específicos baixados/armazenados no sistema. Nesses casos, prefira SEMPRE acionar_agente_pdf.
 
@@ -168,7 +170,7 @@ def acionar_pesquisador(query: str) -> str:
     return response.content
 
 
-def acionar_copywriter(instrucao: str) -> str:
+def acionar_copywriter(instrucao: str, **kwargs) -> str:
     """Delega a tarefa de escrita persuasiva e criação de roteiros usando a voz do Expert ao Copywriter.
 
     Args:
@@ -178,7 +180,7 @@ def acionar_copywriter(instrucao: str) -> str:
     return response.content
 
 
-def acionar_juridico(conteudo: str) -> str:
+def acionar_juridico(conteudo: str, **kwargs) -> str:
     """Delega a tarefa de revisão de compliance e limites legais de uma promessa ou texto ao Jurídico.
 
     Args:
@@ -188,7 +190,7 @@ def acionar_juridico(conteudo: str) -> str:
     return response.content
 
 
-def acionar_criador_experts(tarefa: str) -> str:
+def acionar_criador_experts(tarefa: str, **kwargs) -> str:
     """Delega a criação de identidade, big idea ou estratégia visual de um projeto ao Criador_Experts.
 
     Args:
@@ -198,7 +200,7 @@ def acionar_criador_experts(tarefa: str) -> str:
     return response.content
 
 
-def acionar_criador_midia(instrucao: str) -> str:
+def acionar_criador_midia(instrucao: str, **kwargs) -> str:
     """Delega tarefas de criação audiovisual (imagens e vídeos) ao agente Criador de Mídia.
 
     Args:
@@ -209,7 +211,7 @@ def acionar_criador_midia(instrucao: str) -> str:
 
 
 # --- DELEGAÇÃO DE TAREFAS (FERRAMENTAS PARA O ORQUESTRADOR) --- # Added
-def acionar_agente_pdf(query: str) -> str:
+def acionar_agente_pdf(query: str, **kwargs) -> str:
     """Delega a tarefa de consulta e análise de documentos internos corporativos (PDFs) locais ao Agente PDF.
     USE ESTA FERRAMENTA quando o usuário perguntar sobre relatórios financeiros, resultados trimestrais de empresas específicas (ex: Grendene) ou documentos que já foram carregados internamente no sistema, ANTES de tentar buscar na internet.
 
@@ -240,7 +242,7 @@ orquestrador = Agent(
 )
 
 # --- CARREGAMENTO INICIAL DE CONHECIMENTO (PDF) --- # Added
-if pdf_knowledge:
+if pdf_knowledge and not os.getenv("SKIP_PDF_LOAD"):
     logging.info("Carregando PDF da Grendene no Banco de Conhecimento...")
     try:
         pdf_knowledge.add_content(
