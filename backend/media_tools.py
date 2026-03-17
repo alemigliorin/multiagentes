@@ -8,8 +8,18 @@ from google.genai import types
 
 load_dotenv()
 
-# Inicializa o client garantindo o uso do AI Studio (Free Tier) pela chave de API explicitada
-client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
+# Client será inicializado sob demanda para evitar crash se a chave faltar no startup
+_client = None
+
+def get_client():
+    global _client
+    if _client is None:
+        api_key = os.getenv("GOOGLE_API_KEY")
+        if not api_key:
+            return None
+        _client = genai.Client(api_key=api_key)
+    return _client
+
 
 VEO_JOBS_FILE = os.path.join("tmp", "veo_jobs.json")
 
@@ -51,6 +61,10 @@ def gerar_imagem(prompt: str) -> str:
     output_path = os.path.join(output_dir, filename)
 
     try:
+        client = get_client()
+        if not client:
+            return "Erro: GOOGLE_API_KEY não configurada no ambiente (.env)."
+
         # Utilizando o imagen-4.0 que já está disponível na SDK
         result = client.models.generate_images(
             model="imagen-4.0-fast-generate-001",
@@ -94,6 +108,10 @@ def gerar_video(prompt: str, image_url: str = None) -> str:
         # Este bloco é uma implementação baseada na interface experada da SDK genai
         # de Models para vídeo.
         try:
+            client = get_client()
+            if not client:
+                return "Erro: GOOGLE_API_KEY não configurada no ambiente (.env)."
+
             # Retorna no LRO (Long Running Operation)
             result = client.models.generate_videos(model="veo-3.1-fast-generate-preview", prompt=prompt, config={"aspect_ratio": "16:9"})
 
