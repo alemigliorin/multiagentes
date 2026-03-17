@@ -258,17 +258,35 @@ if pdf_knowledge and not os.getenv("SKIP_PDF_LOAD"):
 
 # Configuração de CORS - No ambiente de produção, certifique-se de que CORS_ORIGINS inclua a URL do site.
 raw_origins = os.getenv("CORS_ORIGINS", "http://localhost:3001,http://localhost:3000,http://127.0.0.1:3001")
-allowed_origins = [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
-logging.info(f"CORS origins permitidas: {allowed_origins}")
+# Suporte a múltiplos separadores (vírgula ou ponto e vírgula) e limpeza de espaços/aspas
+allowed_origins = [
+    o.strip().strip("'").strip('"') 
+    for o in re.split(r'[;,]', raw_origins) 
+    if o.strip()
+]
+logging.info(f"🛡️ CORS: Origins permitidas configuradas: {allowed_origins}")
 
 # Expondo apenas o orquestrador no AgentOS
 agent_os = AgentOS(agents=[orquestrador], cors_allowed_origins=allowed_origins)
 app = agent_os.get_app()
 
+# Middleware para logar todas as requisições e seus Origins (útil para depurar CORS)
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    origin = request.headers.get("origin")
+    if origin:
+        logging.info(f"📥 Requisição recebida de Origin: {origin}")
+    response = await call_next(request)
+    return response
+
 # Endpoint de saúde explícito
 @app.get("/health")
 async def health_check():
-    return {"status": "ok", "origins": allowed_origins}
+    return {
+        "status": "ok", 
+        "configured_origins": allowed_origins,
+        "environment_raw_origins": os.getenv("CORS_ORIGINS")
+    }
 
 # Middleware de Autenticação
 app.add_middleware(BaseHTTPMiddleware, dispatch=auth_middleware)
