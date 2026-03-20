@@ -20,6 +20,7 @@ const useAIChatStreamHandler = () => {
   const selectedEndpoint = useStore((state) => state.selectedEndpoint)
   const authToken = useStore((state) => state.authToken)
   const mode = useStore((state) => state.mode)
+  const selectedModel = useStore((state) => state.selectedModel)
   const setStreamingErrorMessage = useStore(
     (state) => state.setStreamingErrorMessage
   )
@@ -146,10 +147,11 @@ const useAIChatStreamHandler = () => {
 
         if (mode === 'team' && teamId) {
           RunUrl = APIRoutes.TeamRun(endpointUrl, teamId)
-        } else if (mode === 'agent' && agentId) {
+        } else if (mode === 'agent') {
+          const effectiveAgentId = agentId || 'orquestrador'
           RunUrl = APIRoutes.AgentRun(endpointUrl).replace(
             '{agent_id}',
-            agentId
+            effectiveAgentId
           )
         }
 
@@ -162,6 +164,7 @@ const useAIChatStreamHandler = () => {
 
         formData.append('stream', 'true')
         formData.append('session_id', sessionId ?? '')
+        if (selectedModel) formData.append('model', selectedModel)
 
         // Create headers with auth token from Supabase
         const headers: Record<string, string> = {}

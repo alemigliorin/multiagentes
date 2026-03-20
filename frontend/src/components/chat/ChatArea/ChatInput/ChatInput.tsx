@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/dialog'
 
 const ChatInput = () => {
-  const { chatInputRef, folders, sessionFolders, setSessionFolder } = useStore()
+  const { mode, chatInputRef, folders, sessionFolders, setSessionFolder } = useStore()
   const { handleStreamResponse } = useAIChatStreamHandler()
   const [selectedAgent] = useQueryState('agent')
   const [teamId] = useQueryState('team')
@@ -237,7 +237,7 @@ const ChatInput = () => {
               }
             }}
             className="w-full resize-none border-0 bg-transparent p-0 text-sm text-foreground placeholder:text-muted focus:outline-none focus:ring-0"
-            disabled={!(selectedAgent || teamId) || isUploadingTemp}
+            disabled={(mode === 'team' && !teamId) || isUploadingTemp}
             ref={chatInputRef}
           />
         </div>
@@ -332,13 +332,13 @@ const ChatInput = () => {
             {/* Send button */}
             <Button
               onClick={handleSubmit}
-              disabled={
-                (!(selectedAgent || teamId) ||
-                  !inputMessage.trim() ||
-                  isStreaming ||
-                  isUploadingTemp) &&
-                !selectedTempFile
-              }
+            disabled={
+              ((mode === 'team' && !teamId) ||
+                !inputMessage.trim() ||
+                isStreaming ||
+                isUploadingTemp) &&
+              !selectedTempFile
+            }
               size="icon"
               className="hover:bg-brand/90 h-8 w-8 rounded-lg bg-brand text-white transition-all disabled:opacity-30"
             >

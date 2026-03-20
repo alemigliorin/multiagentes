@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Bot, Compass, ChevronDown } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 
 interface Expert {
   id: string
@@ -12,6 +12,12 @@ interface Expert {
 }
 
 const EXPERTS: Expert[] = [
+  {
+    id: 'orquestrador',
+    name: 'Orquestrador',
+    description: 'Líder da Equipe (Default)',
+    emoji: '👑'
+  },
   {
     id: 'pesquisador',
     name: 'Pesquisador',
@@ -50,11 +56,7 @@ const EXPERTS: Expert[] = [
   }
 ]
 
-interface ExpertsListProps {
-  onSelectExpert?: (expertId: string) => void
-}
-
-const ExpertsList = ({ onSelectExpert }: ExpertsListProps) => {
+const ExpertsList = () => {
   const [isCollapsed, setIsCollapsed] = useState(false)
 
   return (
@@ -64,7 +66,7 @@ const ExpertsList = ({ onSelectExpert }: ExpertsListProps) => {
         className="group mb-1 flex w-full cursor-pointer items-center justify-between px-1"
       >
         <span className="text-xs font-semibold uppercase tracking-wider text-muted transition-colors group-hover:text-foreground">
-          Experts
+          Agentes
         </span>
         <motion.div
           animate={{ rotate: isCollapsed ? -90 : 0 }}
@@ -83,25 +85,25 @@ const ExpertsList = ({ onSelectExpert }: ExpertsListProps) => {
             transition={{ duration: 0.2 }}
             className="flex flex-col gap-0.5 overflow-hidden"
           >
-            <motion.button
-              className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-sm text-foreground transition-colors hover:bg-sidebar-hover"
-              whileTap={{ scale: 0.98 }}
-            >
-              <Compass className="h-4 w-4 text-muted" />
-              <span>Explorar</span>
-            </motion.button>
             {EXPERTS.map((expert) => (
-              <motion.button
+              <div
                 key={expert.id}
-                onClick={() => onSelectExpert?.(expert.id)}
-                className="group flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-sm text-foreground transition-colors hover:bg-sidebar-hover"
-                whileTap={{ scale: 0.98 }}
+                className={`flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-sm transition-colors ${
+                  expert.id === 'orquestrador'
+                    ? 'bg-brand/10 text-brand'
+                    : 'text-foreground'
+                }`}
               >
                 <span className="shrink-0 text-base">{expert.emoji}</span>
                 <div className="flex min-w-0 flex-col items-start">
-                  <span className="truncate text-sm">{expert.name}</span>
+                  <span className="truncate text-sm font-medium">
+                    {expert.name}
+                  </span>
+                  <span className="truncate text-xs text-muted-foreground">
+                    {expert.description}
+                  </span>
                 </div>
-              </motion.button>
+              </div>
             ))}
           </motion.div>
         )}
