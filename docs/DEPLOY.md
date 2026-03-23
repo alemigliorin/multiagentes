@@ -43,7 +43,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGc...
 NEXT_PUBLIC_OS_SECURITY_KEY=...   # Opcional
 ```
 
-> Em produção, as variáveis do frontend são injetadas como **Repository Secrets** no GitHub Actions durante o build da imagem Docker. Não ficam no `.env` do servidor.
+> Em produção, as variáveis tanto do frontend quanto do backend devem ficar centralizadas no arquivo `.env` (ou outro método de injeção direto de envs) na raiz do servidor, já que o build ocorre localmente na Hostinger.
 
 ---
 
@@ -86,7 +86,7 @@ GitHub Actions
 
 Neste modelo simplificado, as imagens Docker não são enviadas para um Registry externo. Em vez disso, a própria VPS da Hostinger faz o pull do novo código e builda as imagens localmente. 
 
-As variáveis do frontend (`NEXT_PUBLIC_*`) são injetadas como build args a partir dos **Repository Secrets** no GitHub.
+As variáveis do frontend (`NEXT_PUBLIC_*`) não precisam mais ser cadastradas como secrets no GitHub, elas são injetadas diretamente durante o build local na VPS usando o arquivo `.env`.
 
 ---
 
