@@ -1,0 +1,197 @@
+# Deploy
+
+## Ambientes
+
+| Ambiente | Arquivo | Imagens |
+|----------|---------|---------|
+| Desenvolvimento | `docker-compose.yml` | Buildadas localmente com `--reload` |
+| Produção | `docker-compose.prod.yml` | Buildadas localmente na Hostinger via código fonte |
+
+---
+
+## Variáveis de Ambiente
+
+Crie um arquivo `.env` na raiz do projeto (ou em `backend/.env`). O `start.bat` copia automaticamente da raiz para `backend/` se necessário.
+
+### Backend
+
+```env
+# Provedores de LLM (ao menos OPENAI_API_KEY é obrigatória)
+OPENAI_API_KEY=sk-...
+ANTHROPIC_API_KEY=sk-ant-...
+GOOGLE_API_KEY=AIza...
+GROQ_API_KEY=gsk_...
+DEEPSEEK_API_KEY=...
+TAVILY_API_KEY=tvly-...
+
+# Supabase
+SUPABASE_URL=https://xxxxx.supabase.co
+SUPABASE_KEY=eyJhbGc...
+SUPABASE_DB_URL=postgresql://postgres:senha@db.xxxxx.supabase.co:5432/postgres
+
+# App
+CORS_ORIGINS=http://localhost:3000,https://multiagentes.migliorinlabs.cloud
+SKIP_PDF_LOAD=0   # Defina 1 para pular o RAG (útil em testes)
+```
+
+### Frontend (injetado em build time)
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGc...
+NEXT_PUBLIC_OS_SECURITY_KEY=...   # Opcional
+```
+
+> Em produção, as variáveis do frontend são injetadas como **Repository Secrets** no GitHub Actions durante o build da imagem Docker. Não ficam no `.env` do servidor.
+
+---
+
+## Desenvolvimento Local (Windows)
+
+```bat
+:: Inicia backend (8000) e frontend (3000)
+start.bat
+
+:: Encerra tudo
+stop.bat
+```
+
+O `start.bat`:
+1. Verifica a existência do `.env` (copia da raiz para `backend/` se necessário)
+2. Abre Backend API em janela `cmd` separada via `uv run main.py`
+3. Abre Frontend em janela `cmd` separada via `npm run dev`
+
+### Portas
+
+| Serviço | Porta |
+|---------|-------|
+| Backend (FastAPI) | 8000 |
+| Frontend (Next.js) | 3000 |
+
+---
+
+## CI/CD — GitHub Actions
+
+Fluxo automático em todo push para `main`:
+
+```text
+Push para main
+    ↓
+GitHub Actions
+    ├── Linting (ruff, eslint)
+    ├── Segurança (bandit, audit)
+    └── Testes (pytest)
+```
+
+Neste modelo simplificado, as imagens Docker não são enviadas para um Registry externo. Em vez disso, a própria VPS da Hostinger faz o pull do novo código e builda as imagens localmente. 
+
+As variáveis do frontend (`NEXT_PUBLIC_*`) são injetadas como build args a partir dos **Repository Secrets** no GitHub.
+
+---
+
+## Produção (Hostinger VPS)
+
+### Pré-requisitos
+
+```bash
+# Docker e Docker Compose instalados
+docker --version
+docker compose version
+
+# Rede nginx-proxy (se usar Nginx Proxy Manager)
+docker network create nginx-proxy
+```
+
+### Novo Servidor (Deploy Inicial)
+
+```bash
+git clone https://github.com/alemigliorin/multiagentes.git
+cd multiagentes
+
+# Criar .env com as variáveis de backend e frontend
+cp .env.example .env
+nano .env  # Preencher as chaves
+
+chmod +x scripts/deploy.sh
+./scripts/deploy.sh
+```
+
+### Atualizar após novo código (Push para main)
+
+Acesse a VPS na pasta do projeto e rode:
+
+```bash
+./scripts/deploy.sh
+```
+
+O script automaticamente fará o `git pull` com o código mais recente, realizará o build local das imagens de produção (`docker compose ... --build`) e reiniciará os containers necessários.
+---
+
+## Verificação Pré-push
+
+Simula o build do GitHub Actions localmente antes de fazer push:
+
+```powershell
+.\scripts\verify-build.bat
+```
+
+---
+
+## Troubleshooting
+
+### "URL and Key are required" (Supabase)
+
+O Next.js foi compilado sem as variáveis de ambiente.
+
+**Causa:** Secrets não configurados no GitHub Actions ou cache de imagem antiga.
+
+**Solução — rebuild sem cache na VPS:**
+```bash
+docker compose -f docker-compose.prod.yml build --no-cache frontend
+docker compose -f docker-compose.prod.yml up -d frontend
+```
+
+**Verificar variáveis no container:**
+```bash
+docker exec -it multiagentes-frontend-1 env | grep SUPABASE
+```
+
+### Backend não inicia
+
+```bash
+# Ver logs
+docker compose -f docker-compose.prod.yml logs backend --tail=50
+
+# Verificar variáveis
+docker exec -it multiagentes-backend-1 env | grep OPENAI
+```
+
+### Health check falha
+
+```bash
+curl https://api.migliorinlabs.cloud/health
+# Deve retornar: {"status": "ok"}
+```
+
+### Aviso: "Missing columns {'run_status'} in table ai.agno_approvals"
+
+**Causa:** Inconsistência de schema após atualização da biblioteca Agno.
+
+**Solução:** Executar as seguintes queries no SQL Editor do Supabase:
+```sql
+ALTER TABLE ai.sessions ADD COLUMN IF NOT EXISTS title TEXT;
+ALTER TABLE ai.agno_approvals ADD COLUMN IF NOT EXISTS run_status TEXT;
+```
+
+---
+
+## Arquivos de Configuração Docker
+
+| Arquivo | Uso |
+|---------|-----|
+| `docker-compose.yml` | Desenvolvimento local (build local, reload) |
+| `docker-compose.prod.yml` | Produção (Build source via Docker, restart: unless-stopped) |
+| `frontend/Dockerfile` | Multi-stage build do Next.js |
+| `backend/Dockerfile` | Build do FastAPI com uv |
+| `.github/workflows/` | Pipelines de CI/CD |

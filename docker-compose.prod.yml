@@ -1,6 +1,8 @@
 services:
   backend:
-    image: ghcr.io/alemigliorin/multiagentes-backend:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     restart: unless-stopped
     expose:
       - "8000"
@@ -17,7 +19,6 @@ services:
       - nginx-proxy
 
   frontend:
-    image: ghcr.io/alemigliorin/multiagentes-frontend:latest
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -44,20 +45,6 @@ services:
     networks:
       - nginx-proxy
 
-  frontend-streamlit:
-    image: ghcr.io/alemigliorin/multiagentes-streamlit:latest
-    restart: unless-stopped
-    depends_on:
-      - backend
-    expose:
-      - "8501"
-    environment:
-      - BACKEND_HOST=http://backend:8000
-    volumes:
-      - ./backend/tmp:/app/backend/tmp
-      - ./backend/videos:/app/backend/videos
-    networks:
-      - nginx-proxy
 
 networks:
   nginx-proxy:

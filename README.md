@@ -1,101 +1,91 @@
-# AI Multi-Agentes Projeto
+# Multiagentes — Plataforma de Agentes de IA
 
-Este projeto consiste em um ecossistema de múltiplos agentes de IA com Backend em Python (FastAPI/Agno) e Frontends em Next.js e Streamlit.
+Sistema de múltiplos agentes de IA especializados, orquestrados de forma inteligente para executar tarefas complexas de pesquisa, geração de conteúdo, análise jurídica, criação de mídia e análise de documentos.
 
-## 🚀 Como Rodar Localmente
+## Visão Geral
 
-Consulte as instruções nos diretórios `backend/`, `frontend/` e `frontend-streamlit/`.
+| Camada | Tecnologia | Porta |
+|--------|-----------|-------|
+| Backend (API) | Python, FastAPI, Agno | 8000 |
+| Frontend | Next.js 16, React 18, TypeScript | 3000 |
+| Banco de Dados | Supabase (Auth + DB) + PgVector | — |
 
----
+## Documentação
 
-## 🛡️ Verificação Local (Antes do Push)
+- [Arquitetura](docs/ARCHITECTURE.md) — Estrutura do sistema, agentes e fluxo de dados
+- [Funcionalidades](docs/FUNCTIONALITIES.md) — Agentes, ferramentas e endpoints
+- [Estratégia de Testes](docs/TESTING.md) — Tipos de testes, cobertura e como rodar
+- [Deploy](docs/DEPLOY.md) — Ambientes, CI/CD e instruções para VPS
 
-Para garantir que o build não quebrará no GitHub Actions nem na produção, recomendamos rodar o script de verificação local. Ele simula o build que será feito na nuvem:
+## Início Rápido
+
+### Pré-requisitos
+
+- Python 3.12+ com [uv](https://github.com/astral-sh/uv)
+- Node.js 18+
+- Arquivo `.env` configurado (veja [docs/DEPLOY.md](docs/DEPLOY.md#variáveis-de-ambiente))
+
+### Rodar Localmente (Windows)
+
+```bat
+start.bat
+```
+
+Inicia backend (porta 8000) e frontend (porta 3000) em janelas separadas.
+
+```bat
+stop.bat
+```
+
+### Rodar Manualmente
+
+```bash
+# Backend
+cd backend
+uv run main.py
+
+# Frontend
+cd frontend
+npm run dev
+```
+
+## Scripts Utilitários
+
+| Script | O que faz |
+|--------|-----------|
+| `start.bat` | Inicia backend + frontend |
+| `stop.bat` | Encerra todos os processos |
+| `test.bat` | Roda diagnósticos + pytest |
+| `quality.bat` | Linting, segurança e auditoria de deps |
+| `scripts/validate-local.bat` | Simula build de produção localmente |
+
+## Diagnóstico Rápido
+
+```powershell
+cd backend
+
+# Testa busca web (Tavily + Pesquisador + Orquestrador)
+$env:SKIP_PDF_LOAD="1"; uv run test_search.py
+
+# Testa conexão com banco de dados
+uv run test_db_conn.py
+
+# Testa inicialização do RAG (PDF Knowledge)
+uv run test_pdf_init.py
+```
+
+## Verificação Antes do Push
 
 ```powershell
 .\scripts\verify-build.bat
 ```
+*(Se tudo der certo no GitHub, não se esqueça de validar o Docker rodando `.\scripts\validate-local.bat` antes de puxar na Hostinger)*
 
-Se este script terminar com sucesso, você pode fazer o `git push` com a certeza de que a imagem será gerada corretamente.
 
----
+## Stack Resumida
 
-## 🔍 Diagnóstico e Testes de Pesquisa
+**Backend:** Python · FastAPI · Agno · OpenAI · Anthropic · Google AI · Groq · Tavily · Supabase · PgVector · FFmpeg
 
-Se os agentes não estiverem retornando resultados de pesquisa ou se o sistema parecer lento, você pode usar a ferramenta de diagnóstico local:
+**Frontend:** Next.js · React · TypeScript · Tailwind CSS · Zustand · Radix UI · Framer Motion
 
-1.  **Acesse a pasta do backend:**
-    ```powershell
-    cd backend
-    ```
-
-2.  **Execute o teste de busca:**
-    ```powershell
-    # Windows (PowerShell)
-    $env:SKIP_PDF_LOAD="1"; uv run test_search.py
-
-    # Linux/Mac (Bash)
-    SKIP_PDF_LOAD=1 uv run test_search.py
-    ```
-
-Este script testa:
-- Conexão direta com a API do **Tavily**.
-- Capacidade do Agente **Pesquisador** em processar buscas.
-- Capacidade do **Orquestrador** em delegar tarefas e consolidar resultados.
-
----
-
-## 🏗️ Deployment (Hostinger / VPS)
-
-Para evitar erros de compilação no servidor, utilizamos imagens pré-compiladas hospedadas no **GitHub Container Registry (GHCR)**.
-
-### 1. Requisitos Prévios
-- Docker e Docker Compose instalados na VPS.
-- Um **Personal Access Token (PAT)** do GitHub com permissão `read:packages`.
-- Uma rede Docker externa chamada `nginx-proxy` (comum em setups com Nginx Manager):
-  ```bash
-  docker network create nginx-proxy
-  ```
-
-### 2. Login no GitHub Container Registry
-No seu servidor, execute o login para permitir que o Docker baixe as imagens privadas:
-```bash
-echo "SEU_GITHUB_TOKEN" | docker login ghcr.io -u SEU_USUARIO_GITHUB --password-stdin
-```
-
-### 3. Configuração do ambiente (.env)
-Crie um arquivo `.env` na raiz do projeto com as URLs de produção. Estas variáveis são **obrigatórias** e injetadas durante o build do frontend:
-
-```env
-NEXT_PUBLIC_API_URL=https://api.migliorinlabs.cloud
-CORS_ORIGINS=https://multiagentes.migliorinlabs.cloud,https://api.migliorinlabs.cloud
-NEXT_PUBLIC_SUPABASE_URL=...
-NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-```
-
-### 4. Realizando o Deploy
-O script de deploy irá validar as variáveis antes de iniciar:
-
-```bash
-# Clone o repositório (apenas para pegar os arquivos de config)
-git clone https://github.com/alemigliorin/multiagentes.git
-cd multiagentes
-
-# Execute o script de deploy
-chmod +x scripts/deploy.sh
-./scripts/deploy.sh
-```
-
-### 4. Atualizando o Projeto
-Sempre que você fizer um `push` para a branch `main`, o GitHub Actions irá buildar as novas imagens. Para atualizar o servidor, basta rodar o script de deploy novamente:
-```bash
-./scripts/deploy.sh
-```
-
----
-
-## 🛠️ Tecnologias
-- **Backend**: Python, FastAPI, Agno, OpenAI/Google AI.
-- **Frontend**: Next.js, React, Tailwind CSS.
-- **Streamlit**: Para monitoramento e prototipagem rápida.
-- **DevOps**: Docker, GitHub Actions, GHCR.
+**DevOps:** Docker · GitHub Actions · GHCR · Hostinger VPS
