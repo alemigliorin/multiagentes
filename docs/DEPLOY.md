@@ -126,6 +126,36 @@ Acesse a VPS na pasta do projeto e rode:
 ```
 
 O script automaticamente fará o `git pull` com o código mais recente, realizará o build local das imagens de produção (`docker compose ... --build`) e reiniciará os containers necessários.
+
+### Recriar Ambiente do Zero (Hard Reset)
+
+Se o build continuar utilizando cache antigo e as alterações não refletirem em produção, force uma recriação limpa:
+
+1. Acesse a pasta do projeto:
+   ```bash
+   cd ~/multiagentes
+   ```
+2. Derrube todos os containers e apague as redes/volumes locais:
+   ```bash
+   docker compose -f docker-compose.prod.yml down -v
+   ```
+3. Garanta que seu código local é idêntico ao remoto (destrói modificações locais não commitadas):
+   ```bash
+   git fetch origin
+   git reset --hard origin/main
+   ```
+4. Recrie a rede externa (se necessário):
+   ```bash
+   docker network create nginx-proxy || true
+   ```
+5. Rebuilde as imagens forçando a não utilizar nenhum cache anterior (pode demorar):
+   ```bash
+   docker compose -f docker-compose.prod.yml build --no-cache
+   ```
+6. Suba a aplicação recriada:
+   ```bash
+   ./scripts/deploy.sh
+   ```
 ---
 
 ## Verificação Pré-push
