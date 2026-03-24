@@ -1,14 +1,10 @@
-import os
-
-from dotenv import load_dotenv
 from fastapi import Request
-from fastapi.responses import JSONResponse
 from supabase import Client, create_client
 
-load_dotenv()
+from config.settings import settings
 
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+SUPABASE_URL = settings.SUPABASE_URL
+SUPABASE_KEY = settings.SUPABASE_KEY
 
 _supabase_client = None
 
@@ -48,7 +44,7 @@ async def verify_auth(request: Request):
         # User auth failed or token expired
         if not user_response or not user_response.user:
             return False, "Invalid or expired token"
-            
+
         return True, None
 
     except Exception as e:

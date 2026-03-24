@@ -58,9 +58,8 @@ const useChatActions = () => {
   const clearChat = useCallback(() => {
     setMessages([])
     setSessionId(null)
-    router.replace('/')
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router])
+  }, [])
 
   const focusChatInput = useCallback(() => {
     setTimeout(() => {

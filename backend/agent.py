@@ -19,10 +19,8 @@ from agno.os import AgentOS
 from agno.tools.tavily import TavilyTools
 from agno.vectordb.pgvector import PgVector
 from dotenv import load_dotenv
-from fastapi import File, Form, UploadFile, FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import File, Form, Request, UploadFile
 from fastapi.responses import JSONResponse
-from starlette.middleware.base import BaseHTTPMiddleware
 
 from auth import verify_auth
 from media_tools import consultar_status_video, gerar_imagem, gerar_video
@@ -292,8 +290,8 @@ raw_origins = os.getenv("CORS_ORIGINS") or default_origins
 
 # Suporte a múltiplos separadores (vírgula ou ponto e vírgula) e limpeza de espaços/aspas
 allowed_origins = [
-    o.strip().strip("'").strip('"').rstrip('/') 
-    for o in re.split(r'[;,]', raw_origins) 
+    o.strip().strip("'").strip('"').rstrip('/')
+    for o in re.split(r'[;,]', raw_origins)
     if o.strip()
 ]
 logging.info(f"🛡️ CORS: Origins permitidas configuradas: {allowed_origins}")
@@ -311,15 +309,15 @@ async def unified_middleware(request: Request, call_next):
     origin = request.headers.get("origin")
     if origin:
         logging.info(f"📥 Requisição recebida de Origin: {origin}")
-    
+
     # 2. Verificação de Autenticação (apenas para rotas protegidas)
     auth_result = await verify_auth(request)
     if isinstance(auth_result, tuple) and not auth_result[0]:
         return JSONResponse(
-            status_code=401, 
+            status_code=401,
             content={"detail": auth_result[1]}
         )
-    
+
     # 3. Continuar para o próximo middleware/handler
     response = await call_next(request)
     return response
@@ -334,7 +332,7 @@ async def unified_middleware(request: Request, call_next):
 @app.api_route("/health", methods=["GET", "HEAD", "OPTIONS"])
 async def health_check(request: Request):
     return {
-        "status": "ok", 
+        "status": "ok",
         "message": "Backend is running resiliently",
         "method": request.method,
         "allowed_origins": allowed_origins

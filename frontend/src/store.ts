@@ -179,7 +179,8 @@ export const useStore = create<Store>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         folders: state.folders,
-        sessionFolders: state.sessionFolders
+        sessionFolders: state.sessionFolders,
+        selectedModel: state.selectedModel
       }),
       onRehydrateStorage: () => (state) => {
         state?.setHydrated?.()

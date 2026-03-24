@@ -4,14 +4,9 @@ import { Button } from '@/components/ui/button'
 import useChatActions from '@/hooks/useChatActions'
 import { useStore } from '@/store'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useQueryState } from 'nuqs'
 import {
-  Home,
-  MessageSquare,
-  Bell,
-  HelpCircle,
-  Settings,
   PanelLeftClose,
   PanelLeft,
   Plus,
@@ -25,14 +20,8 @@ import SearchBar from './SearchBar'
 import ProjectFolders from './ProjectFolders'
 import ExpertsList from './ExpertsList'
 import Sessions from './Sessions'
+import ModelSelector from './ModelSelector'
 
-const NAV_ITEMS = [
-  { icon: Home, label: 'Início', id: 'home' },
-  { icon: MessageSquare, label: 'Chats', id: 'chats' },
-  { icon: Bell, label: 'Notificações', id: 'notifications' },
-  { icon: HelpCircle, label: 'Ajuda', id: 'help' },
-  { icon: Settings, label: 'Configurações', id: 'settings' }
-]
 
 const SidebarHeader = () => (
   <div className="flex items-center gap-2.5 px-1">
@@ -54,6 +43,9 @@ const Sidebar = ({
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isChatsCollapsed, setIsChatsCollapsed] = useState(false)
+  const prevCollapsedRef = useRef(false)
+  const [agentId, setAgentId] = useQueryState('agent')
+  const [teamId, setTeamId] = useQueryState('team')
   const { clearChat, focusChatInput, initialize } = useChatActions()
   const { messages, selectedEndpoint, hydrated, mode } = useStore()
   const [isMounted, setIsMounted] = useState(false)
@@ -69,22 +61,21 @@ const Sidebar = ({
     focusChatInput()
   }
 
+  const handleModelSelectorOpenChange = (open: boolean) => {
+    if (open) {
+      prevCollapsedRef.current = isCollapsed
+      setIsCollapsed(true)
+    } else {
+      setIsCollapsed(prevCollapsedRef.current)
+    }
+  }
+
   return (
     <div className="flex h-screen">
       {/* Vertical Icon Navigation */}
       <div className="flex h-full w-12 shrink-0 flex-col items-center justify-between border-r border-sidebar-border bg-sidebar-bg py-3">
         <div className="flex flex-col items-center gap-1">
-          {NAV_ITEMS.map((item) => (
-            <button
-              key={item.id}
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-sidebar-hover hover:text-foreground"
-              title={item.label}
-            >
-              <item.icon className="h-[18px] w-[18px]" />
-            </button>
-          ))}
-        </div>
-        <div className="flex flex-col items-center gap-1">
+          <ModelSelector onOpenChange={handleModelSelectorOpenChange} />
           {isMounted && (
             <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
@@ -98,17 +89,17 @@ const Sidebar = ({
               )}
             </button>
           )}
-          <button
-            onClick={async () => {
-              const { logout } = await import('@/app/login/actions')
-              await logout()
-            }}
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-sidebar-hover hover:text-foreground"
-            title="Sair (Logout)"
-          >
-            <Power className="h-[18px] w-[18px]" />
-          </button>
         </div>
+        <button
+          onClick={async () => {
+            const { logout } = await import('@/app/login/actions')
+            await logout()
+          }}
+          className="flex h-9 w-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-sidebar-hover hover:text-foreground"
+          title="Sair (Logout)"
+        >
+          <Power className="h-[18px] w-[18px]" />
+        </button>
       </div>
 
       {/* Main Sidebar Panel */}
@@ -177,19 +168,16 @@ const Sidebar = ({
                 <ChevronDown className="h-4 w-4" />
               </motion.div>
             </button>
-            <AnimatePresence initial={false}>
-              {!isChatsCollapsed && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="flex flex-col gap-0.5 overflow-hidden"
-                >
-                  <Sessions />
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <motion.div
+              animate={{
+                height: isChatsCollapsed ? 0 : 'auto',
+                opacity: isChatsCollapsed ? 0 : 1
+              }}
+              transition={{ duration: 0.2 }}
+              className="flex flex-col gap-0.5 overflow-hidden"
+            >
+              <Sessions />
+            </motion.div>
           </div>
         </motion.div>
       </motion.aside>

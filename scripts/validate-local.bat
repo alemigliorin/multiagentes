@@ -1,4 +1,5 @@
 @echo off
+cd /d "%~dp0.."
 echo =======================================================
 echo VALIDACAO DE DEPLOY LOCAL (SIMULANDO HOSTINGER)
 echo =======================================================
@@ -15,12 +16,12 @@ if not exist .env (
     exit /b 1
 )
 
-echo [1/3] Limpando eventuais sessoes anteriores do compose de producao...
-docker compose -f docker-compose.prod.yml down
+echo [1/4] Limpando eventuais sessoes anteriores do compose de producao...
+wsl docker compose -f docker-compose.prod.yml down
 
 echo.
-echo [2/3] Buildando as imagens de producao...
-docker compose -f docker-compose.prod.yml build
+echo [2/4] Buildando as imagens de producao...
+wsl docker compose -f docker-compose.prod.yml build
 if errorlevel 1 (
     echo [ERRO] Falha no build! Corrija os erros e tente novamente.
     pause
@@ -28,8 +29,12 @@ if errorlevel 1 (
 )
 
 echo.
-echo [3/3] Subindo os containers temporariamente...
-docker compose -f docker-compose.prod.yml up -d
+echo [3/4] Preparando a rede (nginx-proxy)...
+wsl docker network create nginx-proxy >nul 2>&1
+
+echo.
+echo [4/4] Subindo os containers temporariamente...
+wsl docker compose -f docker-compose.prod.yml up -d
 if errorlevel 1 (
     echo [ERRO] Falha ao subir os containers.
     pause
@@ -49,7 +54,7 @@ echo e rodar o script deploy.sh na VPS.
 echo.
 pause >nul
 
-docker compose -f docker-compose.prod.yml down
+wsl docker compose -f docker-compose.prod.yml down
 echo.
 echo Containers de validacao removidos. Finalizado.
 pause

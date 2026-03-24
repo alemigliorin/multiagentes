@@ -30,23 +30,6 @@ services:
     networks:
       - nginx-proxy
 
-  frontend-streamlit:
-    image: ghcr.io/alemigliorin/multiagentes-streamlit:latest
-    build:
-      context: ./frontend-streamlit
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    depends_on:
-      - backend
-    expose:
-      - "8501"
-    environment:
-      - BACKEND_HOST=http://backend:8000
-    volumes:
-      - ./backend/tmp:/app/backend/tmp
-      - ./backend/videos:/app/backend/videos
-    networks:
-      - nginx-proxy
 
 networks:
   nginx-proxy:

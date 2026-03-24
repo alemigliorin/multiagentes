@@ -1,10 +1,11 @@
 
-import os
+import logging
 import sys
 import time
-import logging
-from dotenv import load_dotenv
+
 from agno.tools.tavily import TavilyTools
+from dotenv import load_dotenv
+
 
 # Forçar UTF-8 no print para evitar erros de charmap no Windows
 def safe_print(*args, **kwargs):
@@ -14,12 +15,11 @@ def safe_print(*args, **kwargs):
         sys.stdout.flush()
     except Exception:
         print(content)
-
-# Carregar env ANTES de importar o agent para garantir que as chaves existam
+# Carregar variáveis de ambiente
 load_dotenv()
 
 # Importar depois do env para garantir que variáveis de ambiente estejam carregadas
-from agent import pesquisador, acionar_pesquisador, orquestrador
+from agents.orchestrator import acionar_pesquisador, orquestrador
 
 # Habilitar logs para ver as chamadas de ferramentas
 logging.basicConfig(level=logging.INFO)
@@ -62,12 +62,12 @@ def test_orchestrator():
 
 if __name__ == "__main__":
     start_total = time.time()
-    
+
     if test_tavily_direct():
         t0 = time.time()
         if test_agent_search():
             t1 = time.time()
             test_orchestrator()
             safe_print(f"\nTempo Orquestrador Final: {time.time() - t1:.2f}s")
-    
+
     safe_print(f"\nTempo total de execução: {time.time() - start_total:.2f}s")

@@ -18,6 +18,8 @@ Para garantir que as variáveis do frontend (Supabase) sejam injetadas corretame
     git pull origin main
     docker compose -f docker-compose.prod.yml pull frontend
     docker compose -f docker-compose.prod.yml up -d --force-recreate frontend
+     docker compose -f docker-compose.prod.yml pull backend
+    docker compose -f docker-compose.prod.yml up -d --force-recreate backend
     ```
 
 ## 🛠️ Solução de Problemas (Troubleshooting)

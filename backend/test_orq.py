@@ -1,4 +1,4 @@
-from agent import orquestrador
+from agents.orchestrator import orquestrador
 
 print("Acionando o orquestrador...")
 try:
