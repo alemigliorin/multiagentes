@@ -54,6 +54,6 @@ orquestrador = create_agent(
     ],
     instructions_file="prompts/orquestrador.md",
     db_url=settings.SUPABASE_DB_URL,
-    num_history_runs=20,
+    num_history_runs=5,
     model=get_model("openai", id=settings.ORCHESTRATOR_MODEL_ID)
 )
