@@ -68,6 +68,7 @@ Retorna `{"status": "ok"}`. Usado para probes de infraestrutura.
 ### Arquivos Estáticos (Mídia)
 
 Arquivos gerados pelos agentes (como o Criador de Mídia) são servidos via endpoints dedicados:
+- `GET /media/list` -> Lista todos os arquivos de mídia disponíveis (imagens e vídeos) com metadados
 - `GET /media/download/{filename}` -> Retorna imagem do diretório `tmp/`
 - `GET /videos/download/{filename}` -> Retorna vídeo do diretório `videos/`
 

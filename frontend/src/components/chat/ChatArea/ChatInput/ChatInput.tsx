@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { useStore } from '@/store'
 import useAIChatStreamHandler from '@/hooks/useAIStreamHandler'
 import { useQueryState } from 'nuqs'
-import { Plus, Wrench, Bot, Mic, ArrowUp, ChevronDown, X } from 'lucide-react'
+import { Plus, Wrench, Bot, Mic, ArrowUp, ChevronDown, X, Download, ImageIcon } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,6 +41,11 @@ const ChatInput = () => {
   const [videoCreatorName, setVideoCreatorName] = useState('')
   const [selectedVideoFile, setSelectedVideoFile] = useState<File | null>(null)
   const [isUploadingVideo, setIsUploadingVideo] = useState(false)
+
+  // Media Gallery
+  const [isMediaGalleryOpen, setIsMediaGalleryOpen] = useState(false)
+  const [mediaFiles, setMediaFiles] = useState<Array<{filename: string, type: string, size: number, created: number, url: string}>>([])
+  const [isLoadingMedia, setIsLoadingMedia] = useState(false)
 
   const tempFileInputRef = useRef<HTMLInputElement>(null)
   const ragFileInputRef = useRef<HTMLInputElement>(null)
@@ -292,6 +297,26 @@ const ChatInput = () => {
                 >
                   Upload de Vídeo (Transcrição)
                 </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="cursor-pointer rounded-lg px-3 py-2 text-sm text-foreground hover:bg-sidebar-hover focus:bg-sidebar-hover"
+                  onClick={async () => {
+                    setIsMediaGalleryOpen(true)
+                    setIsLoadingMedia(true)
+                    try {
+                      const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_DEFAULT_ENDPOINT || 'http://localhost:8000'
+                      const res = await fetch(`${apiUrl}/media/list`)
+                      const data = await res.json()
+                      setMediaFiles(data.files || [])
+                    } catch {
+                      toast.error('Erro ao carregar mídias')
+                    } finally {
+                      setIsLoadingMedia(false)
+                    }
+                  }}
+                >
+                  <Download className="mr-2 h-3.5 w-3.5" />
+                  Download de Mídia (Imagens/Vídeos)
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -406,6 +431,90 @@ const ChatInput = () => {
               {isUploadingVideo ? 'Enviando...' : 'Fazer Upload'}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Media Gallery Modal */}
+      <Dialog open={isMediaGalleryOpen} onOpenChange={setIsMediaGalleryOpen}>
+        <DialogContent className="z-50 rounded-xl border-border bg-card shadow-xl sm:max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-lg text-foreground">
+              <ImageIcon className="h-5 w-5" />
+              Mídia Gerada
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Imagens e vídeos gerados pelos agentes. Clique para baixar.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            {isLoadingMedia ? (
+              <div className="flex items-center justify-center py-8">
+                <p className="text-sm text-muted-foreground">Carregando...</p>
+              </div>
+            ) : mediaFiles.length === 0 ? (
+              <div className="flex flex-col items-center justify-center gap-2 py-8">
+                <ImageIcon className="h-10 w-10 text-muted" />
+                <p className="text-sm text-muted-foreground">
+                  Nenhuma mídia gerada ainda.
+                </p>
+                <p className="text-xs text-muted">
+                  Peça ao agente para gerar uma imagem ou vídeo.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-4">
+                {mediaFiles.map((file) => {
+                  const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_DEFAULT_ENDPOINT || 'http://localhost:8000'
+                  const fullUrl = `${apiUrl}${file.url}`
+                  const sizeKb = (file.size / 1024).toFixed(1)
+                  const date = new Date(file.created * 1000).toLocaleString('pt-BR')
+
+                  return (
+                    <div
+                      key={file.filename}
+                      className="group relative flex flex-col gap-2 rounded-lg border border-border bg-background-secondary/30 p-2"
+                    >
+                      {file.type === 'image' ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={fullUrl}
+                          alt={file.filename}
+                          className="h-36 w-full rounded-md object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none'
+                          }}
+                        />
+                      ) : (
+                        <div className="flex h-36 items-center justify-center rounded-md bg-background-secondary">
+                          <p className="text-xs text-muted">🎬 Vídeo</p>
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between gap-1">
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-xs font-medium text-foreground">
+                            {file.filename}
+                          </p>
+                          <p className="text-[10px] text-muted">
+                            {sizeKb} KB • {date}
+                          </p>
+                        </div>
+                        <a
+                          href={fullUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          download
+                          className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-accent text-primary transition-colors hover:bg-accent/80"
+                          title="Baixar"
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                        </a>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
