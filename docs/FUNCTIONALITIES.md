@@ -65,12 +65,12 @@ HEAD /health
 
 Retorna `{"status": "ok"}`. Usado para probes de infraestrutura.
 
-### Arquivos Estáticos (Mídia)
+### Arquivos Estáticos (Mídia) / Supabase Storage
 
-Arquivos gerados pelos agentes (como o Criador de Mídia) são servidos via endpoints dedicados:
-- `GET /media/list` -> Lista todos os arquivos de mídia disponíveis (imagens e vídeos) com metadados
-- `GET /media/download/{filename}` -> Retorna imagem do diretório `tmp/`
-- `GET /videos/download/{filename}` -> Retorna vídeo do diretório `videos/`
+Arquivos gerados pelos agentes (como o Criador de Mídia) são salvos diretamente no **Supabase Storage** no bucket público `media`.
+- Nenhuma imagem ou vídeo longo é salvo no disco do servidor.
+- `GET /media/list` -> Lista todos os arquivos (imagens e vídeos) presentes no bucket `media` usando a API do Supabase e retorna metadata.
+- As URLs retornadas para download/preview são nativas da CDN do Supabase (absolutas e públicas).
 
 ### Endpoints da Agno (AgentOS)
 

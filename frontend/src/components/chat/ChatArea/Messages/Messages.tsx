@@ -150,9 +150,15 @@ const ToolComponent = memo(({ tools }: ToolCallProps) => {
 
   // Detecta URLs de mídia no conteúdo do tool call
   const mediaUrl = tools.content
-    ? tools.content.match(/https?:\/\/[^\s)]+\/media\/download\/[^\s)]+/)?.[0] ||
-      tools.content.match(/https?:\/\/[^\s)]+\/videos\/download\/[^\s)]+/)?.[0]
+    ? tools.content.match(/https?:\/\/[^\s)]+\/storage\/v1\/object\/public\/[^\s)]+/)?.[0] ||
+      tools.content.match(/https?:\/\/[^\s)]+\/(?:media|videos|images)\/download\/[^\s)]+/)?.[0] ||
+      (tools.content.startsWith('data:image') ? tools.content : null)
     : null
+
+  const isVeryLong = tools.content && tools.content.length > 5000
+  const displayContent = isVeryLong 
+    ? tools.content.slice(0, 5000) + "\n\n... [Conteúdo truncado para performance. Clique no botão de ferramentas acima para ver mídias completas se disponível.]" 
+    : tools.content
 
   return (
     <div className="flex flex-col gap-2">
@@ -191,7 +197,7 @@ const ToolComponent = memo(({ tools }: ToolCallProps) => {
           )}
           {!mediaUrl && (
             <p className="text-xs text-secondary whitespace-pre-wrap break-all">
-              {tools.content}
+              {displayContent}
             </p>
           )}
         </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { toast } from 'sonner'
 import { TextArea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
@@ -47,9 +47,50 @@ const ChatInput = () => {
   const [mediaFiles, setMediaFiles] = useState<Array<{filename: string, type: string, size: number, created: number, url: string}>>([])
   const [isLoadingMedia, setIsLoadingMedia] = useState(false)
 
+  const [isToolsMenuOpen, setIsToolsMenuOpen] = useState(false)
+
   const tempFileInputRef = useRef<HTMLInputElement>(null)
   const ragFileInputRef = useRef<HTMLInputElement>(null)
   const videoFileInputRef = useRef<HTMLInputElement>(null)
+
+  // -- FIX DEFINITIVO PARA TRAVAMENTO DE UI (RADIX UI / POINTER-EVENTS) --
+  // Garante agressivamente que o corpo e o html nunca fiquem "presos" sem eventos de clique
+  useEffect(() => {
+    if (!isMediaGalleryOpen && !isVideoModalOpen && !isToolsMenuOpen) {
+      const timeoutId = setTimeout(() => {
+        if (document.body.style.pointerEvents === 'none') {
+          document.body.style.pointerEvents = 'auto'
+          document.body.style.removeProperty('pointer-events')
+        }
+        if (document.documentElement.style.pointerEvents === 'none') {
+          document.documentElement.style.pointerEvents = 'auto'
+          document.documentElement.style.removeProperty('pointer-events')
+        }
+      }, 150)
+      return () => clearTimeout(timeoutId)
+    }
+  }, [isMediaGalleryOpen, isVideoModalOpen, isToolsMenuOpen])
+
+  // -- CARREGAMENTO DE MÍDIA SEPARADO DO MENU --
+  // Evita que o menu trave enquanto espera a resposta do backend
+  useEffect(() => {
+    if (isMediaGalleryOpen) {
+      const loadMedia = async () => {
+        setIsLoadingMedia(true)
+        try {
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_DEFAULT_ENDPOINT || 'http://localhost:8000'
+          const res = await fetch(`${apiUrl}/media/list`)
+          const data = await res.json()
+          setMediaFiles(data.files || [])
+        } catch {
+          toast.error('Erro ao carregar mídias')
+        } finally {
+          setIsLoadingMedia(false)
+        }
+      }
+      loadMedia()
+    }
+  }, [isMediaGalleryOpen])
 
   const handleSubmit = async () => {
     if (!inputMessage.trim() && !selectedTempFile) return
@@ -242,7 +283,7 @@ const ChatInput = () => {
               }
             }}
             className="w-full resize-none border-0 bg-transparent p-0 text-sm text-foreground placeholder:text-muted focus:outline-none focus:ring-0"
-            disabled={(mode === 'team' && !teamId) || isUploadingTemp}
+            disabled={(mode === 'team' && !teamId) || isUploadingTemp || isStreaming}
             ref={chatInputRef}
           />
         </div>
@@ -250,7 +291,7 @@ const ChatInput = () => {
         {/* Toolbar */}
         <div className="flex items-center justify-between px-3 pb-2.5 pt-1">
           <div className="flex items-center gap-1">
-            {/* Plus button */}
+            {/* Hidden Input for PDF */}
             <input
               type="file"
               accept=".pdf"
@@ -258,13 +299,6 @@ const ChatInput = () => {
               ref={tempFileInputRef}
               onChange={(e) => setSelectedTempFile(e.target.files?.[0] || null)}
             />
-            <button
-              onClick={() => tempFileInputRef.current?.click()}
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-muted transition-colors hover:bg-sidebar-hover hover:text-foreground"
-              title="Anexar arquivo PDF temporário"
-            >
-              <Plus className="h-4 w-4" />
-            </button>
 
             {/* Ferramentas button */}
             <input
@@ -274,7 +308,7 @@ const ChatInput = () => {
               ref={ragFileInputRef}
               onChange={handleRagUpload}
             />
-            <DropdownMenu>
+            <DropdownMenu open={isToolsMenuOpen} onOpenChange={setIsToolsMenuOpen}>
               <DropdownMenuTrigger asChild>
                 <button className="flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-sm text-muted outline-none ring-0 transition-colors hover:bg-sidebar-hover hover:text-foreground">
                   <Wrench className="h-3.5 w-3.5" />
@@ -287,31 +321,41 @@ const ChatInput = () => {
               >
                 <DropdownMenuItem
                   className="cursor-pointer rounded-lg px-3 py-2 text-sm text-foreground hover:bg-sidebar-hover focus:bg-sidebar-hover"
-                  onClick={() => ragFileInputRef.current?.click()}
+                  onSelect={(e) => {
+                    e.preventDefault()
+                    tempFileInputRef.current?.click()
+                  }}
                 >
+                  <Plus className="mr-2 h-3.5 w-3.5" />
+                  Anexar PDF (Temporário)
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="cursor-pointer rounded-lg px-3 py-2 text-sm text-foreground hover:bg-sidebar-hover focus:bg-sidebar-hover"
+                  onSelect={(e) => {
+                    e.preventDefault()
+                    ragFileInputRef.current?.click()
+                  }}
+                >
+                  <Bot className="mr-2 h-3.5 w-3.5" />
                   Adicionar ao RAG Global (PDF)
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="cursor-pointer rounded-lg px-3 py-2 text-sm text-foreground hover:bg-sidebar-hover focus:bg-sidebar-hover"
-                  onClick={() => setIsVideoModalOpen(true)}
+                  onSelect={(e) => {
+                    e.preventDefault()
+                    setIsToolsMenuOpen(false)
+                    setTimeout(() => setIsVideoModalOpen(true), 150)
+                  }}
                 >
+                  <Mic className="mr-2 h-3.5 w-3.5" />
                   Upload de Vídeo (Transcrição)
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="cursor-pointer rounded-lg px-3 py-2 text-sm text-foreground hover:bg-sidebar-hover focus:bg-sidebar-hover"
-                  onClick={async () => {
-                    setIsMediaGalleryOpen(true)
-                    setIsLoadingMedia(true)
-                    try {
-                      const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_DEFAULT_ENDPOINT || 'http://localhost:8000'
-                      const res = await fetch(`${apiUrl}/media/list`)
-                      const data = await res.json()
-                      setMediaFiles(data.files || [])
-                    } catch {
-                      toast.error('Erro ao carregar mídias')
-                    } finally {
-                      setIsLoadingMedia(false)
-                    }
+                  onSelect={(e) => {
+                    e.preventDefault()
+                    setIsToolsMenuOpen(false)
+                    setTimeout(() => setIsMediaGalleryOpen(true), 150)
                   }}
                 >
                   <Download className="mr-2 h-3.5 w-3.5" />
@@ -464,8 +508,7 @@ const ChatInput = () => {
             ) : (
               <div className="grid grid-cols-2 gap-4">
                 {mediaFiles.map((file) => {
-                  const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_DEFAULT_ENDPOINT || 'http://localhost:8000'
-                  const fullUrl = `${apiUrl}${file.url}`
+                  const fullUrl = file.url
                   const sizeKb = (file.size / 1024).toFixed(1)
                   const date = new Date(file.created * 1000).toLocaleString('pt-BR')
 

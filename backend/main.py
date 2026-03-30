@@ -50,4 +50,4 @@ app.include_router(media_router)
 # No framework Agno, o app já está pronto para o Uvicorn através do agent_os.get_app()
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=False)

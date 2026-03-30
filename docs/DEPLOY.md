@@ -34,7 +34,14 @@ CORS_ORIGINS=http://localhost:3000,https://multiagentes.migliorinlabs.cloud
 SKIP_PDF_LOAD=0   # Defina 1 para pular o RAG (útil em testes)
 ```
 
-### Frontend (injetado em build time)
+### 4. Supabase Storage (Mídia)
+
+O backend agora armazena imagens e vídeos gerados diretamente no Supabase Storage:
+1. No painel do Supabase, vá em **Storage** > **New Bucket**
+2. Nomeie o bucket como **`media`**
+3. Marque a opção **Public bucket** para que as imagens sejam acessíveis sem autenticação
+
+### 5. Setup do Frontend (injetado em build time)
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8000

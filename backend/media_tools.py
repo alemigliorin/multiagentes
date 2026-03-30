@@ -57,11 +57,9 @@ def gerar_imagem(prompt: str) -> str:
         str: Caminho local do arquivo da imagem gerada.
     """
     filename = f"imagem_{int(time.time())}.png"
-    output_dir = "tmp"
-    os.makedirs(output_dir, exist_ok=True)
-    output_path = os.path.join(output_dir, filename)
 
     try:
+        from storage import upload_media
         client = get_client()
         if not client:
             return "Erro: GOOGLE_API_KEY não configurada no ambiente (.env)."
@@ -74,10 +72,13 @@ def gerar_imagem(prompt: str) -> str:
         )
         if result and result.generated_images:
             image_bytes = result.generated_images[0].image.image_bytes
-            with open(output_path, "wb") as f:
-                f.write(image_bytes)
             
-            public_url = f"{settings.BACKEND_URL}/media/download/{filename}"
+            # Fazer upload para o Supabase
+            public_url = upload_media(image_bytes, f"images/{filename}", "image/png")
+            
+            if not public_url:
+                return "Erro ao salvar a imagem no Supabase Storage."
+                
             return f"Sucesso: Imagem gerada! Entregue o seguinte markdown ao usuário na sua resposta:\n![Imagem gerada]({public_url})"
         else:
             return "Falha ao gerar a imagem: Nenhuma imagem retornada pela API."
@@ -98,9 +99,7 @@ def gerar_video(prompt: str, image_url: str = None) -> str:
         str: Mensagem de status com o caminho do vídeo gerado.
     """
     filename = f"video_{int(time.time())}.mp4"
-    output_dir = "videos"
-    os.makedirs(output_dir, exist_ok=True)
-    output_path = os.path.join(output_dir, filename)
+    output_path = f"videos/{filename}"
 
     try:
         # Acesso ao modelo Veo via nova SDK google-genai.
@@ -162,10 +161,8 @@ def consultar_status_video(job_id: str) -> str:
 
     job = jobs[job_id]
 
-    if job.get("status") == "completed" and os.path.exists(job.get("output_path", "")):
-        video_filename = os.path.basename(job['output_path'])
-        public_url = f"{settings.BACKEND_URL}/videos/download/{video_filename}"
-        return f"O vídeo já havia sido concluído e está salvo pronto para uso. Entregue este link ao usuário: {public_url}"
+    if job.get("status") == "completed" and job.get("public_url"):
+        return f"O vídeo já havia sido concluído e está salvo pronto para uso. Entregue este link ao usuário: {job['public_url']}"
 
     try:
         api_key = os.getenv("GOOGLE_API_KEY")
@@ -194,15 +191,21 @@ def consultar_status_video(job_id: str) -> str:
 
                 vid_resp = requests.get(download_url, stream=True, timeout=30)
                 if vid_resp.status_code == 200:
+                    video_bytes = bytearray()
+                    for chunk in vid_resp.iter_content(chunk_size=8192):
+                        video_bytes.extend(chunk)
+
+                    from storage import upload_media
                     output_path = job["output_path"]
-                    with open(output_path, "wb") as f:
-                        for chunk in vid_resp.iter_content(chunk_size=8192):
-                            f.write(chunk)
+                    public_url = upload_media(bytes(video_bytes), output_path, "video/mp4")
+                    
+                    if not public_url:
+                        return "Vídeo concluído, mas falhou ao fazer upload para o Supabase Storage."
 
                     job["status"] = "completed"
+                    job["public_url"] = public_url
                     _save_jobs(jobs)
-                    video_filename = os.path.basename(job['output_path'])
-                    public_url = f"{settings.BACKEND_URL}/videos/download/{video_filename}"
+                    
                     return f"VÍDEO CONCLUÍDO E BAIXADO COM SUCESSO! Informe ao usuário e entregue o seguinte link para download:\n{public_url}"
                 else:
                     return f"Vídeo concluído, mas falhou ao baixar: HTTP {vid_resp.status_code}"
