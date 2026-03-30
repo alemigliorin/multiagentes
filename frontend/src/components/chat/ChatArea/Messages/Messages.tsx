@@ -145,11 +145,60 @@ const Reasonings: FC<ReasoningProps> = ({ reasoning }) => (
   </div>
 )
 
-const ToolComponent = memo(({ tools }: ToolCallProps) => (
-  <div className="cursor-default rounded-full bg-accent px-2 py-1.5 text-xs">
-    <p className="text-primary/80 font-dmmono uppercase">{tools.tool_name}</p>
-  </div>
-))
+const ToolComponent = memo(({ tools }: ToolCallProps) => {
+  const [expanded, setExpanded] = React.useState(false)
+
+  // Detecta URLs de mídia no conteúdo do tool call
+  const mediaUrl = tools.content
+    ? tools.content.match(/https?:\/\/[^\s)]+\/media\/download\/[^\s)]+/)?.[0] ||
+      tools.content.match(/https?:\/\/[^\s)]+\/videos\/download\/[^\s)]+/)?.[0]
+    : null
+
+  return (
+    <div className="flex flex-col gap-2">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="cursor-pointer rounded-full bg-accent px-2 py-1.5 text-xs transition-colors hover:bg-accent/80"
+      >
+        <p className="text-primary/80 font-dmmono uppercase">
+          {expanded ? '▼' : '▶'} {tools.tool_name}
+        </p>
+      </button>
+
+      {expanded && tools.content && (
+        <div className="flex flex-col gap-3 rounded-lg bg-background-secondary/50 p-3">
+          {mediaUrl && (
+            <div className="flex flex-col gap-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={mediaUrl}
+                alt="Mídia gerada"
+                className="max-w-md rounded-lg"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none'
+                }}
+              />
+              <a
+                href={mediaUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                download
+                className="inline-flex w-fit items-center gap-1 rounded-md bg-accent px-3 py-1.5 text-xs text-primary transition-colors hover:bg-accent/80"
+              >
+                📥 Baixar mídia
+              </a>
+            </div>
+          )}
+          {!mediaUrl && (
+            <p className="text-xs text-secondary whitespace-pre-wrap break-all">
+              {tools.content}
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  )
+})
 ToolComponent.displayName = 'ToolComponent'
 const Messages = ({ messages }: MessageListProps) => {
   if (messages.length === 0) {

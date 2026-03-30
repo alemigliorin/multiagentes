@@ -10,6 +10,10 @@ router = APIRouter(tags=["media"])
 MEDIA_DIR = Path("tmp")
 VIDEO_DIR = Path("videos")
 
+# Garantir que os diretórios existam ao inicializar
+MEDIA_DIR.mkdir(exist_ok=True)
+VIDEO_DIR.mkdir(exist_ok=True)
+
 @router.get("/media/download/{filename}")
 async def download_media(filename: str):
     """Retorna um arquivo de mídia (imagem) gerado pelo agente."""
