@@ -28,6 +28,7 @@ class Settings(BaseSettings):
 
     # App Configuration
     CORS_ORIGINS: str = "https://multiagentes.migliorinlabs.cloud,https://api.migliorinlabs.cloud,http://localhost:3001,http://localhost:3000,http://127.0.0.1:3001"
+    BACKEND_URL: str = "http://localhost:8000"
     SKIP_PDF_LOAD: bool = False
 
     # Model Defaults

@@ -67,9 +67,9 @@ Retorna `{"status": "ok"}`. Usado para probes de infraestrutura.
 
 ### Arquivos Estáticos (Mídia)
 
-Arquivos gerados pelos agentes (como o Criador de Mídia) são servidos publicamente:
-- `GET /media/{filename}` -> Serve imagens estáticas do diretório `tmp/`
-- `GET /videos-media/{filename}` -> Serve vídeos do diretório `videos/`
+Arquivos gerados pelos agentes (como o Criador de Mídia) são servidos via endpoints dedicados:
+- `GET /media/download/{filename}` -> Retorna imagem do diretório `tmp/`
+- `GET /videos/download/{filename}` -> Retorna vídeo do diretório `videos/`
 
 ### Endpoints da Agno (AgentOS)
 

@@ -5,6 +5,7 @@ import time
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
+from config.settings import settings
 
 load_dotenv()
 
@@ -76,7 +77,7 @@ def gerar_imagem(prompt: str) -> str:
             with open(output_path, "wb") as f:
                 f.write(image_bytes)
             
-            public_url = f"/media/{filename}"
+            public_url = f"{settings.BACKEND_URL}/media/download/{filename}"
             return f"Sucesso: Imagem gerada! Entregue o seguinte markdown ao usuário na sua resposta:\n![Imagem gerada]({public_url})"
         else:
             return "Falha ao gerar a imagem: Nenhuma imagem retornada pela API."
@@ -162,8 +163,9 @@ def consultar_status_video(job_id: str) -> str:
     job = jobs[job_id]
 
     if job.get("status") == "completed" and os.path.exists(job.get("output_path", "")):
-        public_url = f"/videos-media/{job['output_path'].split(os.sep)[-1]}"
-        return f"O vídeo já havia sido concluído e está salvo pronto para uso. Entregue este markdown ao usuário:\n<video controls src='{public_url}' width='100%'></video>"
+        video_filename = os.path.basename(job['output_path'])
+        public_url = f"{settings.BACKEND_URL}/videos/download/{video_filename}"
+        return f"O vídeo já havia sido concluído e está salvo pronto para uso. Entregue este link ao usuário: {public_url}"
 
     try:
         api_key = os.getenv("GOOGLE_API_KEY")
@@ -199,8 +201,9 @@ def consultar_status_video(job_id: str) -> str:
 
                     job["status"] = "completed"
                     _save_jobs(jobs)
-                    public_url = f"/videos-media/{job['output_path'].split(os.sep)[-1]}"
-                    return f"VÍDEO CONCLUÍDO E BAIXADO COM SUCESSO! Informe ao usuário e entregue o seguinte markdown para vídeo na sua resposta:\n<video controls src='{public_url}' width='100%'></video>"
+                    video_filename = os.path.basename(job['output_path'])
+                    public_url = f"{settings.BACKEND_URL}/videos/download/{video_filename}"
+                    return f"VÍDEO CONCLUÍDO E BAIXADO COM SUCESSO! Informe ao usuário e entregue o seguinte link para download:\n{public_url}"
                 else:
                     return f"Vídeo concluído, mas falhou ao baixar: HTTP {vid_resp.status_code}"
 

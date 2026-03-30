@@ -3,7 +3,6 @@ import logging
 from agno.os import AgentOS
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from fastapi.staticfiles import StaticFiles
 
 # Agentes
 from agents.orchestrator import orquestrador
@@ -18,6 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from routers.health import router as health_router
 from routers.uploads import router as upload_router
 from routers.config import router as config_router
+from routers.media_router import router as media_router
 
 # 🛡️ Configuração de Segurança e CORS
 allowed_origins = parse_allowed_origins()
@@ -45,12 +45,7 @@ app.include_router(health_router)
 app.include_router(upload_router)
 app.include_router(config_router)
 
-# 📂 Servindo Arquivos Estáticos (Mídia e Vídeos)
-import os
-os.makedirs("tmp", exist_ok=True)
-os.makedirs("videos", exist_ok=True)
-app.mount("/media", StaticFiles(directory="tmp"), name="media")
-app.mount("/videos-media", StaticFiles(directory="videos"), name="videos-media")
+app.include_router(media_router)
 
 # No framework Agno, o app já está pronto para o Uvicorn através do agent_os.get_app()
 if __name__ == "__main__":

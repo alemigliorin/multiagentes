@@ -2,7 +2,7 @@
 
 import { FC, useState } from 'react'
 
-import Image from 'next/image'
+
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
@@ -195,14 +195,12 @@ const Img = ({ src, alt }: ImgProps) => {
           </Link>
         </div>
       ) : (
-        <Image
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
           src={srcString}
-          width={1280}
-          height={720}
           alt={alt ?? 'Rendered image'}
           className="size-full rounded-md object-cover"
           onError={() => setError(true)}
-          unoptimized
         />
       )}
     </div>
