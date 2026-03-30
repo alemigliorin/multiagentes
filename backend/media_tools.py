@@ -75,7 +75,9 @@ def gerar_imagem(prompt: str) -> str:
             image_bytes = result.generated_images[0].image.image_bytes
             with open(output_path, "wb") as f:
                 f.write(image_bytes)
-            return f"Sucesso: Imagem gerada e salva em '{output_path}'"
+            
+            public_url = f"/media/{filename}"
+            return f"Sucesso: Imagem gerada! Entregue o seguinte markdown ao usuário na sua resposta:\n![Imagem gerada]({public_url})"
         else:
             return "Falha ao gerar a imagem: Nenhuma imagem retornada pela API."
     except Exception as e:
@@ -160,7 +162,8 @@ def consultar_status_video(job_id: str) -> str:
     job = jobs[job_id]
 
     if job.get("status") == "completed" and os.path.exists(job.get("output_path", "")):
-        return f"O vídeo já havia sido concluído e está salvo pronto para uso em: '{job['output_path']}'"
+        public_url = f"/videos-media/{job['output_path'].split(os.sep)[-1]}"
+        return f"O vídeo já havia sido concluído e está salvo pronto para uso. Entregue este markdown ao usuário:\n<video controls src='{public_url}' width='100%'></video>"
 
     try:
         api_key = os.getenv("GOOGLE_API_KEY")
@@ -196,7 +199,8 @@ def consultar_status_video(job_id: str) -> str:
 
                     job["status"] = "completed"
                     _save_jobs(jobs)
-                    return f"VÍDEO CONCLUÍDO E BAIXADO COM SUCESSO! Informar ao usuário que o vídeo está finalizado e pronto no caminho: '{output_path}'"
+                    public_url = f"/videos-media/{job['output_path'].split(os.sep)[-1]}"
+                    return f"VÍDEO CONCLUÍDO E BAIXADO COM SUCESSO! Informe ao usuário e entregue o seguinte markdown para vídeo na sua resposta:\n<video controls src='{public_url}' width='100%'></video>"
                 else:
                     return f"Vídeo concluído, mas falhou ao baixar: HTTP {vid_resp.status_code}"
 
