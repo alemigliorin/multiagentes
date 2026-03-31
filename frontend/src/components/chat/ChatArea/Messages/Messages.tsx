@@ -155,10 +155,11 @@ const ToolComponent = memo(({ tools }: ToolCallProps) => {
       (tools.content.startsWith('data:image') ? tools.content : null)
     : null
 
-  const isVeryLong = tools.content && tools.content.length > 5000
-  const displayContent = isVeryLong 
-    ? tools.content.slice(0, 5000) + "\n\n... [Conteúdo truncado para performance. Clique no botão de ferramentas acima para ver mídias completas se disponível.]" 
-    : tools.content
+  const content = tools.content
+  const isVeryLong = (content?.length ?? 0) > 5000
+  const displayContent = (isVeryLong && content)
+    ? content.slice(0, 5000) + "\n\n... [Conteúdo truncado para performance. Clique no botão de ferramentas acima para ver mídias completas se disponível.]" 
+    : content
 
   return (
     <div className="flex flex-col gap-2">
