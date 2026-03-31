@@ -26,6 +26,7 @@ dependencies = [
     "pydantic-settings>=2.7.1",
     "yfinance>=1.2.0",
     "pydantic>=2.10.0,<2.11.0",
+    "duckduckgo-search>=8.1.1",
 ]
 
 [project.optional-dependencies]

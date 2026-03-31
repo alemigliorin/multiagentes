@@ -151,14 +151,14 @@ O sistema utiliza PgVector (extensão do PostgreSQL) para armazenar e buscar emb
 
 ## Ferramentas de Busca Web
 
-Duas ferramentas com profundidades diferentes, ambas via Tavily API:
+Duas ferramentas com profundidades diferentes, ambas via Tavily API (com sistema de tolerância a falhas via DuckDuckGo):
 
-| Ferramenta | Latência | Uso |
+| Ferramenta | Latência Normal (Timeout Limite) | Uso |
 |-----------|----------|-----|
-| `busca_rapida` | ~2s | Perguntas factuais simples |
-| `busca_profunda` | ~8s | Pesquisa com múltiplas fontes e análise |
+| `busca_rapida` | ~2s (10s) | Perguntas factuais simples |
+| `busca_profunda` | ~8s (20s) | Pesquisa com múltiplas fontes e análise |
 
-Se `TAVILY_API_KEY` não estiver definida, as ferramentas não são carregadas e o Pesquisador opera apenas com o conhecimento do modelo.
+Se `TAVILY_API_KEY` não estiver definida, ou se a API oficial cair / demorar mais que o Timeout definido em `.env` (`TAVILY_TIMEOUT_RAPIDA` ou `TAVILY_TIMEOUT_PROFUNDA`), as ferramentas usarão a biblioteca local `duckduckgo-search` de forma inteiramente invisível, preservando a experiência dos Agentes sem impactá-los com erros catastróficos.
 
 ---
 

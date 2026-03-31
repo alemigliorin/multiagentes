@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     GROQ_API_KEY: str | None = None
     DEEPSEEK_API_KEY: str | None = None
     TAVILY_API_KEY: str | None = None
+    TAVILY_TIMEOUT_RAPIDA: int = 60
+    TAVILY_TIMEOUT_PROFUNDA: int = 300
 
     # Supabase Configuration
     SUPABASE_URL: str | None = None
