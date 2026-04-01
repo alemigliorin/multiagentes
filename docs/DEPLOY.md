@@ -56,6 +56,9 @@ NEXT_PUBLIC_OS_SECURITY_KEY=...   # Opcional
 
 > Em produção, as variáveis tanto do frontend quanto do backend devem ficar centralizadas no arquivo `.env` (ou outro método de injeção direto de envs) na raiz do servidor, já que o build ocorre localmente na Hostinger.
 
+> **⚠️ CRÍTICO — `.env` da VPS deve conter `SUPABASE_DB_URL`!**  
+> Sem essa variável no `.env` do servidor, o backend não inicializa o banco PostgreSQL, resultando em **histórico de chats desativado** e **RAG global (PDF) quebrado**. O `docker-compose.prod.yml` passa essa variável explicitamente para o container backend.
+
 ---
 
 ## Desenvolvimento Local (Windows)
@@ -196,7 +199,33 @@ docker compose -f docker-compose.prod.yml up -d frontend
 **Verificar variáveis no container:**
 ```bash
 docker exec -it multiagentes-frontend-1 env | grep SUPABASE
+docker exec -it multiagentes-backend-1 env | grep SUPABASE
 ```
+
+### Histórico de chats não retorna / RAG PDF "Base de conhecimento não inicializada"
+
+**Causa:** `SUPABASE_DB_URL` ausente no `.env` da VPS. O backend não consegue conectar ao PostgreSQL.
+
+**Diagnóstico:**
+```bash
+# Deve imprimir a URL do banco
+docker exec -it multiagentes-backend-1 printenv SUPABASE_DB_URL
+```
+
+**Solução:** Adicionar ao `.env` da VPS (na raiz do projeto):
+```env
+SUPABASE_DB_URL=postgresql://postgres.PROJECT_REF:SENHA@aws-1-us-east-1.pooler.supabase.com:5432/postgres
+```
+Depois reiniciar o container:
+```bash
+docker compose -f docker-compose.prod.yml up -d backend
+```
+
+### "Invalid Refresh Token: Refresh Token Not Found" (Frontend SSR)
+
+**Causa:** O middleware do Next.js (`src/middleware.ts`) não existia — estava nomeado incorretamente como `src/proxy.ts`. Sem o middleware, a sessão do Supabase jamais era renovada pelo servidor.
+
+**Verificação:** O arquivo `src/middleware.ts` deve existir e exportar a função `middleware` (não `proxy`). Este arquivo foi corrigido no código — basta fazer deploy.
 
 ### Backend não inicia
 
